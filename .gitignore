@@ -2,7 +2,6 @@ app/__pycache__/
 __pycache__/
 app/.ipynb_checkpoints/
 app/output/
-app/test_dataset/
 app/PointCNN/output/
 *.pyc
 *.bin
