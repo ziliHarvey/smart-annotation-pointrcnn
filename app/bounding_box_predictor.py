@@ -134,7 +134,7 @@ class BoundingBoxPredictor():
         
         # -----------------------------------------------------
         # derive pointRcnn label
-        label_path = detections_dir +"/000001.txt"
+        label_path = detections_dir + "/" + fname + ".txt"
         label = get_label_anno(label_path)
         print(label)
         bounding_boxes_opt = {}
