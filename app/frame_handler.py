@@ -56,25 +56,31 @@ class FrameHandler:
 ........as well as the intensity.
 ........"""
 
-        bin_dir = join(self.DATASET_DIR, drivename, self.INPUT_BIN_DIR)
-        filename = join(bin_dir, fname.split('.')[0] + '.ply')
-        pc = PyntCloud.from_file(filename)
-        data = pc.points.to_numpy()[:, :4]
-        data[np.isnan(data)] = .0
-#         if ground_removed:
-#             filename = join(self.DATASET_DIR, drivename,
-#                             self.GROUND_REMOVED_DIR, fname.split('.'
-#                             )[0] + '.bin')
-#             data = np.fromfile(filename, dtype=np.float32)
+        #bin_dir = join(self.DATASET_DIR, drivename, self.INPUT_BIN_DIR)
+        #filename = join(bin_dir, fname.split('.')[0] + '.ply')
+        #pc = PyntCloud.from_file(filename)
+        #data = pc.points.to_numpy()[:, :4]
+        #data[np.isnan(data)] = .0
+
+        seg_dir = "PointCNN/output/rcnn/argo_config_sampling_trainfull/eval/epoch_no_number/sample/test_mode/rpn_result/data"
+        seg_file = seg_dir + "/" + fname + ".npy"
+        data = None
+        if isfile(seg_file):
+            data = np.load(seg_file).reshape(-1, 5)[:, :4]
+            data[np.isnan(data)] = .0
+
+        #bin_dir = join(self.DATASET_DIR, drivename, self.INPUT_BIN_DIR)
+        #filename = join(bin_dir, fname.split('.')[0] + '.ply')
+        #pc = PyntCloud.from_file(filename)
+        #data = pc.points.to_numpy()[:, :4]
+        #print(data)
+        #data[np.isnan(data)] = .0
+        #print(data.dtype)
         if dtype == str:
             data = data.flatten(order='C').tolist()
             data_str = ','.join([str(x) for x in data])
             return data_str
-        else:
-            if ground_removed:
-                return data.reshape((-1, 4))
-            else:
-                return data.reshape((-1, 4))[:, :3]
+        return data
 
     def load_annotation(
         self,
