@@ -6,58 +6,35 @@ import time
 import random
 
 
-pythonApp = " CUDA_VISIBLE_DEVICES=0 python3.6 "
-script_axcrf = " PointCNN/predicting_point_segmentation.py " #"predicting_point_segmentation_with_axcrf.py  "
+pythonApp = "python "
 script_seg = "  PointCNN/predicting_point_segmentation.py "
 
 def check_succes_sys_call(_command, file_check):
-    
-    
     i = 0
     while os.path.isfile(file_check) == False :
-        
         print(i, os.path.isfile(file_check), file_check)
-        
         os.system(" killall python3.6 & ")
         os.system(_command)  
         if(i>0):
             time.sleep(random.randint(5,30))
         i = i + 1
-        
-    
     return True
 
 def get_pointcnn_labels_axcrf(filename):
-    # ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
-
-    # drivename, fname = filename.split("/")    
-    # if os.path.isfile( os.path.join(ROOT_DIR, "PointCNN/output/"+drivename+"_"+fname+"axcrf.bin") ) == False :
-
-    #     os.system(" killall python3.6 & ")
-            
-    #     os.system(pythonApp+ script_axcrf + "--retrieve_whole_files=0 --filename={}".format(filename))
-        
-    #     os.system(pythonApp+ script_axcrf + "--retrieve_whole_files=1 --filename={}".format(filename)+ " &")
-
-    # bounded_indices = np.fromfile(
-    #                     os.path.join(ROOT_DIR, "PointCNN/output/"+drivename+"_"+fname+"axcrf.bin"),
-    #                     dtype=np.int)
-    # #os.system("rm {}/PointCNN/output/"+drivename+"_"+fname+".bin".format(ROOT_DIR))
-
-    # return bounded_indices.tolist()
-    # # os.system("rm classify/bounding_boxes/*.json")
     return None
 
 def get_pointcnn_labels(filename, settingsControls, ground_removed=False, foreground_only=True):
     
     
-    # print("please wait....", filename)
+    print("please wait....", filename)
 
-    # ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
+    seg_dir = "PointCNN/output/rcnn/argo_config_sampling_trainfull/eval/epoch_no_number/sample/test_mode/rpn_result/data"
 
-    # drivename, fname = filename.split("/")    
-
-    
+    drivename, fname = filename.split("/")
+    seg_file = seg_dir + "/" + fname + ".npy"
+    # will add check isfile later 
+    bounded_indices = np.load(seg_file).reshape(-1, 5)[:, -1].flatten()
+    print(bounded_indices) 
     
     
     # if(settingsControls["WithDenoising"] == False):
@@ -111,13 +88,12 @@ def get_pointcnn_labels(filename, settingsControls, ground_removed=False, foregr
     #                         os.path.join(ROOT_DIR, "PointCNN/output/"+drivename+"_"+fname+postfix+".bin"),
     #                         dtype=np.int)
         
-   
+    if(foreground_only):
+        bounded_indices =   (bounded_indices == 1.0 ).nonzero()[0]
+        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+        print(bounded_indices.shape)
+        return bounded_indices.tolist()
+    else:
+        return bounded_indices
 
-    # if(foreground_only):
-    #     bounded_indices =   (bounded_indices > 0 ).nonzero()[0]
-
-    #     return bounded_indices.tolist()
-    # else:
-    #     return bounded_indices
-    return None
 
