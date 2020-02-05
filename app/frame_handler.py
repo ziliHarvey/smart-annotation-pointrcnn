@@ -1,12 +1,17 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-from os import listdir, makedirs
+from os import listdir, makedirs, system, chdir, getcwd
 from os.path import isfile, join, dirname, realpath, isdir
 import json
 import numpy as np
 from models import Frame, fixed_annotation_error
 from pyntcloud import PyntCloud
+from preprocess import preprocess
 
+
+# temporary script, will be replaced later
+pythonApp = "python "
+script_seg = "eval_rcnn.py --cfg_file cfgs/argo_config_sampling_trainfull.yaml --rcnn_ckpt checkpoint_epoch_40.pth --rpn_ckpt checkpoint_epoch_50.pth --batch_size 1 --eval_mode rcnn --test"
 
 class FrameHandler:
 
@@ -30,8 +35,8 @@ class FrameHandler:
 
     def get_frame_names(self):
         """
-........Get all the frame names
-........"""
+        Get all the frame names
+        """
 
         # return ",".join(self.frame_names)
 
@@ -44,26 +49,15 @@ class FrameHandler:
         dtype=str,
         ground_removed=False,
         ):
-        """
-........Gets point cloud as list of floats
-
-........Input:
-........- fname: Frame name. Can have file extension. 
-
-........Returns a string of comma-separated floats. The number of floats 
-........is 4N, where N is the number of points in the point cloud. 
-........Each point is represented by 4 numbers - the x, y, z coordinates 
-........as well as the intensity.
-........"""
-
-        #bin_dir = join(self.DATASET_DIR, drivename, self.INPUT_BIN_DIR)
-        #filename = join(bin_dir, fname.split('.')[0] + '.ply')
-        #pc = PyntCloud.from_file(filename)
-        #data = pc.points.to_numpy()[:, :4]
-        #data[np.isnan(data)] = .0
 
         seg_dir = "PointCNN/output/rcnn/argo_config_sampling_trainfull/eval/epoch_no_number/sample/test_mode/rpn_result/data"
         seg_file = seg_dir + "/" + fname + ".npy"
+        if not isfile(seg_file):
+            # execute pointrcnn
+            # currently have to run on the whole files to generate corresponding out
+            # will be replaced by only inferencing on this specific file
+            preprocess()
+
         data = None
         if isfile(seg_file):
             data = np.load(seg_file).reshape(-1, 5)[:, :4]
@@ -154,5 +148,4 @@ class FrameHandler:
             f.write(json_str)
             return 1
         return 0
-
 

@@ -877,6 +877,7 @@ def repeat_eval_ckpt(root_result_dir, ckpt_dir):
 def create_dataloader(logger):
     mode = 'TEST' if args.test else 'EVAL'
     #DATA_PATH = os.path.join('..', 'data')
+    # calls from app/frame_handler
     DATA_PATH = '../../test_dataset/0_drive_0064_sync'
     
     # create dataloader

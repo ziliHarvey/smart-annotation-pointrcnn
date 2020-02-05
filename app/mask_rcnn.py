@@ -4,10 +4,11 @@ import numpy as np
 import os.path
 import time
 import random
+from preprocess import preprocess
 
 
 pythonApp = "python "
-script_seg = "  PointCNN/predicting_point_segmentation.py "
+script_seg = "eval_rcnn.py --cfg_file cfgs/argo_config_sampling_trainfull.yaml --rcnn_ckpt checkpoint_epoch_40.pth --rpn_ckpt checkpoint_epoch_50.pth --batch_size 1 --eval_mode rcnn --test"
 
 def check_succes_sys_call(_command, file_check):
     i = 0
@@ -31,67 +32,18 @@ def get_pointcnn_labels(filename, settingsControls, ground_removed=False, foregr
     seg_dir = "PointCNN/output/rcnn/argo_config_sampling_trainfull/eval/epoch_no_number/sample/test_mode/rpn_result/data"
 
     drivename, fname = filename.split("/")
-    seg_file = seg_dir + "/" + fname + ".npy"
-    # will add check isfile later 
+    seg_file = seg_dir + "/" + fname + ".npy" 
+
+    if not os.path.isfile(seg_file):
+        # execute pointrcnn
+        # currently have to run on the whole files to generate corresponding out
+        # will be replaced by only inferencing on this specific file
+        preprocess();
+         
     bounded_indices = np.load(seg_file).reshape(-1, 5)[:, -1].flatten()
-    print(bounded_indices) 
-    
-    
-    # if(settingsControls["WithDenoising"] == False):
-    #     postfix = "normal-weights"
-
-    #     if(ground_removed):
             
-    #         if os.path.isfile( os.path.join(ROOT_DIR, "PointCNN/output/"+drivename+"_"+fname+"ground_removed.bin") ) == False :
-    #             check_succes_sys_call(pythonApp+ script_seg + " --ground_removed=1 --retrieve_whole_files=0 --filename={}".format(filename),  os.path.join(ROOT_DIR, "PointCNN/output/"+drivename+"_"+fname+"ground_removed.bin") )
-
-    #             os.system(pythonApp+ script_seg + " --ground_removed=1 --retrieve_whole_files=1 --filename={}".format(filename)+ " &")
-            
-            
-    #         bounded_indices = np.fromfile(
-    #                         os.path.join(ROOT_DIR, "PointCNN/output/"+drivename+"_"+fname+"ground_removed.bin"),
-    #                         dtype=np.int)
-        
-        
-    #     else: #Non-Ground Removed
-            
-    #         if os.path.isfile( os.path.join(ROOT_DIR, "PointCNN/output/"+drivename+"_"+fname+postfix+".bin") ) == False :
-
-          
-    #             check_succes_sys_call(pythonApp+ script_seg + " --ground_removed=0 --retrieve_whole_files=0 --postfix="+postfix+" --filename={}".format(filename),   os.path.join(ROOT_DIR, "PointCNN/output/"+drivename+"_"+fname+postfix+".bin"))
-                    
-
-    #             os.system(pythonApp+ script_seg + " --ground_removed=0  --retrieve_whole_files=1 --postfix="+postfix+" --filename={}".format(filename)+ " & ")
-                
-                
-    #         bounded_indices = np.fromfile(
-    #             os.path.join(ROOT_DIR, "PointCNN/output/"+drivename+"_"+fname+postfix+".bin"),
-    #             dtype=np.int)
-            
-            
-
-    # else: # Denoise
-        
-    #     postfix = "denoise-weights"
-        
-    #     print("exist", os.path.isfile( os.path.join(ROOT_DIR, "PointCNN/output/"+drivename+"_"+fname+postfix+".bin") ), os.path.join(ROOT_DIR, "PointCNN/output/"+drivename+"_"+fname+postfix+".bin"))
-        
-    #     if os.path.isfile( os.path.join(ROOT_DIR, "PointCNN/output/"+drivename+"_"+fname+postfix+".bin") ) == False :
-
-            
-    #         check_succes_sys_call(pythonApp+ script_seg + " --ground_removed=0 --retrieve_whole_files=0 --postfix="+postfix+" --filename={}".format(filename), os.path.join(ROOT_DIR, "PointCNN/output/"+drivename+"_"+fname+postfix+".bin"))
-            
-    #         os.system(pythonApp+ script_seg + " --ground_removed=0  --retrieve_whole_files=1 --postfix="+postfix+" --filename={}".format(filename)+ " & ")
-            
-            
-    #     bounded_indices = np.fromfile(
-    #                         os.path.join(ROOT_DIR, "PointCNN/output/"+drivename+"_"+fname+postfix+".bin"),
-    #                         dtype=np.int)
-        
     if(foreground_only):
         bounded_indices =   (bounded_indices == 1.0 ).nonzero()[0]
-        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-        print(bounded_indices.shape)
         return bounded_indices.tolist()
     else:
         return bounded_indices
