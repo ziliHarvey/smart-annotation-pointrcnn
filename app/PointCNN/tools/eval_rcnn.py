@@ -600,6 +600,7 @@ def eval_one_epoch_joint(model, dataloader, epoch_id, result_dir, logger):
 
             rpn_cls_np = ret_dict['rpn_cls'].cpu().numpy()
             rpn_xyz_np = ret_dict['backbone_xyz'].cpu().numpy()
+            rpn_xyz_np = np.dot(np.linalg.inv(argo_to_kitti),ret_dict['backbone_xyz'].cpu().numpy()[0].T).T.reshape(1, -1, 3)
             seg_result_np = seg_result.cpu().numpy()
             output_data = np.concatenate((rpn_xyz_np, rpn_cls_np.reshape(batch_size, -1, 1),
                                           seg_result_np.reshape(batch_size, -1, 1)), axis=2)
