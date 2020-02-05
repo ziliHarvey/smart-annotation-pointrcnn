@@ -57,7 +57,7 @@ function App() {
                     var drive = drive_keys[i];
                     for (var j = 0; j < this.drives[drive].length; j++) {
                         
-                        if(j > 9){
+                        if(j > 50){
                             break;
                         }
                         var fname = pathJoin([drive, this.drives[drive][j].split('.')[0]]);
