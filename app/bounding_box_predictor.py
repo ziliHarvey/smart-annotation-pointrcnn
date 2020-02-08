@@ -136,7 +136,6 @@ class BoundingBoxPredictor():
         # derive pointRcnn label
         label_path = detections_dir + "/" + fname + ".txt"
         label = get_label_anno(label_path)
-        print(label)
         bounding_boxes_opt = {}
         for i in range(len(label["name"])):
             # {1:'Pedestrian', 2:'Car', 3:'Cyclist', 4:'Truck' ...} 
@@ -174,7 +173,6 @@ class BoundingBoxPredictor():
             # insert into bounding_boxes_opt
             bounding_boxes_opt[str(i)] = bounding_box
             bounding_boxes_opt[str(i)]["object_id"] = object_name
-        print(bounding_boxes_opt)
         return bounding_boxes_opt
     
     def transform_coords(self, fname, x, inv=False):
@@ -749,7 +747,7 @@ class BoundingBoxPredictor():
         return top_left_corner, top_right_corner, bottom_right_corner, bottom_left_corner, center, w, l
     
 
-    def corners_to_bounding_box(self, corners, context=None):
+    def corners_to_bounding_box(self, corners, points, is_shape_fitting_required=False, context=None):
         sorted_corners = sorted(corners, key=lambda x:x[1])
         if sorted_corners[2][0] > sorted_corners[3][0]:
             sorted_corners[2], sorted_corners[3] = sorted_corners[3], sorted_corners[2]
@@ -995,46 +993,8 @@ class BoundingBoxPredictor():
           
             
             edges, corners = self.search_rectangle_fit(X, _criterion)
-            
-
                 
-                
-                
-            bounding_box, pointsInside, corners = self.corners_to_bounding_box(corners, np.copy(png_source), is_shape_fitting_required)
-            bbox_storage.append([bounding_box,pointsInside, corners ])
-            point_max_storage.append( len(pointsInside) )
-                   
-                
-        l_np = np.asarray(point_max_storage).argmax()
-        
-        #print(point_max_storage)
-        
-        corners =  np.array(bbox_storage[l_np][2])
-        pointsInside = bbox_storage[l_np][1]
-        bounding_box = bbox_storage[l_np][0]
-
-
-
-        if plot:
-            
-            
-            plt.ylim(( bounding_box['center'][0]+3,  bounding_box['center'][0]-3))
-            plt.xlim(( bounding_box['center'][1]-3,  bounding_box['center'][1]+3))
-
-            plt.scatter(png_source[pointsInside,1], png_source[pointsInside,0], c='#D4AF37', s=2.5)
-
-            plt.scatter(png_source[:,1], png_source[:,0], c='r', s=1)
-            plt.scatter(X[:,1], X[:,0], c='g', s=3)
-            plt.scatter(corners[:,1], corners[:,0], c='#D4AF37', s=2) 
-            self.plot_edges(corners)
-
-
-            #plt.grid()
-            fig.savefig('static/images/temp.png', dpi=fig.dpi)
-
-
-
-
+            bounding_box = self.corners_to_bounding_box(corners, np.copy(png_source), is_shape_fitting_required)
         return bounding_box
 
     def plot_edges(self, corners, num_samples=100, c='#D4AF37', label=''):
