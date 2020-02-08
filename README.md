@@ -11,6 +11,7 @@ sh build_and_install.sh
 Also install all necessary libraries using conda, such as flask, easydict,tqdm, tensorboardX, etc.
 
 ## Usage
+**Notice that currently it only works on [the given data](https://github.com/ziliHarvey/smart-annotation-pointrcnn/tree/master/app/test_dataset/0_drive_0064_sync/sample/argoverse/lidar)**
 ```
 cd app
 python app.py
