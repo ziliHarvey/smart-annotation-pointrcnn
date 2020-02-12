@@ -1,5 +1,4 @@
 import matplotlib
-matplotlib.use('Agg')
 import numpy as np
 from scipy.spatial import cKDTree
 from models import BoundingBox, Frame
@@ -15,11 +14,8 @@ import matplotlib.lines as mlines
 import time
 import math
 from models import NextFrameBBOX, is_overlap_with_other_boxes, homogeneous_transformation
-
 from sklearn.cluster import DBSCAN
 from mask_rcnn import get_pointcnn_labels
-
-# -------------------------------------------
 from label_loader import get_label_anno
 
 object_types = {'VEHICLE': 0}
@@ -132,7 +128,6 @@ class BoundingBoxPredictor():
         drivename, fname = fname.split("/")
         idx = self.frame_handler.drives[drivename].index(fname)       
         
-        # -----------------------------------------------------
         # derive pointRcnn label
         label_path = detections_dir + "/" + fname + ".txt"
         label = get_label_anno(label_path)
@@ -158,16 +153,12 @@ class BoundingBoxPredictor():
             bounding_box["height"] = h
 
             # top right corner
-#             corner1_y = center_y + w/2 * np.cos(theta) + l/2 * np.sin(theta)
-#             corner1_x = center_x + w/2 * np.sin(theta) - l/2 * np.cos(theta)
-            corner1_y = center_y + l/2
-            corner1_x = center_x + w/2
+            corner1_y = center_y - w/2 * np.cos(theta) + l/2 * np.sin(theta)
+            corner1_x = center_x + w/2 * np.sin(theta) + l/2 * np.cos(theta)
             bounding_box["corner1"] = [corner1_x, corner1_y]
             # bottom left corner
-#             corner2_y = center_y - w/2 * np.cos(theta) - l/2 * np.sin(theta)
-#             corner2_x = center_x - w/2 * np.sin(theta) + l/2 * np.cos(theta)
-            corner2_y = center_y - l/2
-            corner2_x = center_x - w/2
+            corner2_y = center_y + w/2 * np.cos(theta) - l/2 * np.sin(theta)
+            corner2_x = center_x - w/2 * np.sin(theta) - l/2 * np.cos(theta)
             bounding_box["corner2"] = [corner2_x, corner2_y]
 
             # insert into bounding_boxes_opt

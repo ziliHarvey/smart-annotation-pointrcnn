@@ -24,7 +24,7 @@ and the rest will be very fast.
 - [x] Fully-Automated-Bbox click
 - [x] Segmented object points display
 - [x] One-click annotation by holding A key and click on the point
-- [ ] Fix heading angle in boxes display
+- [x] Fix heading angle in boxes display
 - [ ] Display all LiDAR points with corresponded point labels
 - [ ] Modify dataLoader to run on the specied file
 - [ ] remove legacy code and files and clean
