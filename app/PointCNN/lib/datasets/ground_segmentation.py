@@ -3,7 +3,7 @@ import copy
 
 def ground_segmentation(pc,iter_cycle = 5, threshold = 0.3):
     
-    pc = valid_region(pc,{'x':[-60,60],'y':[-40,40],'z':[-3,3]})
+    pc = valid_region(pc,{'x':[-60,60],'y':[-40,40],'z':[-3.5,3.5]})
     pc = np.hstack((pc,np.arange(pc.shape[0],dtype=int).reshape(-1,1)))
     pc_orig = copy.deepcopy(pc)
     

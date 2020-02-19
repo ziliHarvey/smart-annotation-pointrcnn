@@ -60,7 +60,7 @@ class KittiRCNNDataset(KittiDataset):
                 self.preprocess_rpn_training_data()
             else:
                 self.sample_id_list = [int(sample_id) for sample_id in self.lidar_idx_list]
-                self.logger.info('Load testing samples from %s' % self.lidar_dir)
+                self.logger.info('Load testing samples from %s' % self.lidarset_dir)
                 self.logger.info('Done: total test samples %d' % len(self.sample_id_list))
         elif cfg.RCNN.ENABLED:
             for idx in range(0, self.num_sample):

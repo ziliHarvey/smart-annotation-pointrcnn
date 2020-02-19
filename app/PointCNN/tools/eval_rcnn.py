@@ -70,24 +70,12 @@ def create_logger(log_file):
     return logging.getLogger(__name__)
 
 
-def save_kitti_format(sample_id, calib, bbox3d, kitti_output_dir, scores, img_shape):
+def save_kitti_format(sample_id, bbox3d, kitti_output_dir, scores):
     corners3d = kitti_utils.boxes3d_to_corners3d(bbox3d)
-    img_boxes, _ = calib.corners3d_to_img_boxes(corners3d)
-
-    img_boxes[:, 0] = np.clip(img_boxes[:, 0], 0, img_shape[1] - 1)
-    img_boxes[:, 1] = np.clip(img_boxes[:, 1], 0, img_shape[0] - 1)
-    img_boxes[:, 2] = np.clip(img_boxes[:, 2], 0, img_shape[1] - 1)
-    img_boxes[:, 3] = np.clip(img_boxes[:, 3], 0, img_shape[0] - 1)
-
-    img_boxes_w = img_boxes[:, 2] - img_boxes[:, 0]
-    img_boxes_h = img_boxes[:, 3] - img_boxes[:, 1]
-    box_valid_mask = np.logical_and(img_boxes_w < img_shape[1] * 0.8, img_boxes_h < img_shape[0] * 0.8)
 
     kitti_output_file = os.path.join(kitti_output_dir, '%06d.txt' % sample_id)
     with open(kitti_output_file, 'w') as f:
         for k in range(bbox3d.shape[0]):
-            if box_valid_mask[k] == 0:
-                continue
             x, z, ry = bbox3d[k, 0], bbox3d[k, 2], bbox3d[k, 6]
             beta = np.arctan2(z, x)
             alpha = -np.sign(beta) * np.pi / 2 + beta + ry
@@ -607,12 +595,12 @@ def eval_one_epoch_joint(model, dataloader, epoch_id, result_dir, logger):
 
             for k in range(batch_size):
                 cur_sample_id = sample_id[k]
-                calib = dataset.get_calib(cur_sample_id)
-                image_shape = dataset.get_image_shape(cur_sample_id)
-                save_kitti_format(cur_sample_id, calib, roi_boxes3d_np[k], roi_output_dir,
-                                  roi_scores_raw_np[k], image_shape)
-                save_kitti_format(cur_sample_id, calib, pred_boxes3d_np[k], refine_output_dir,
-                                  raw_scores_np[k], image_shape)
+                #calib = dataset.get_calib(cur_sample_id)
+                #image_shape = dataset.get_image_shape(cur_sample_id)
+                save_kitti_format(cur_sample_id,  roi_boxes3d_np[k], roi_output_dir,
+                                  roi_scores_raw_np[k])
+                save_kitti_format(cur_sample_id,  pred_boxes3d_np[k], refine_output_dir,
+                                  raw_scores_np[k])
 
                 output_file = os.path.join(rpn_output_dir, '%06d.npy' % cur_sample_id)
                 np.save(output_file, output_data.astype(np.float32))
@@ -638,10 +626,10 @@ def eval_one_epoch_joint(model, dataloader, epoch_id, result_dir, logger):
             pred_boxes3d_selected, scores_selected = pred_boxes3d_selected.cpu().numpy(), scores_selected.cpu().numpy()
 
             cur_sample_id = sample_id[k]
-            calib = dataset.get_calib(cur_sample_id)
+            #calib = dataset.get_calib(cur_sample_id)
             final_total += pred_boxes3d_selected.shape[0]
-            image_shape = dataset.get_image_shape(cur_sample_id)
-            save_kitti_format(cur_sample_id, calib, pred_boxes3d_selected, final_output_dir, scores_selected, image_shape)
+            #image_shape = dataset.get_image_shape(cur_sample_id)
+            save_kitti_format(cur_sample_id, pred_boxes3d_selected, final_output_dir, scores_selected)
 
     progress_bar.close()
     # dump empty files
@@ -878,7 +866,7 @@ def create_dataloader(logger):
     mode = 'TEST' if args.test else 'EVAL'
     #DATA_PATH = os.path.join('..', 'data')
     # calls from app/frame_handler
-    DATA_PATH = '../../test_dataset/0_drive_0064_sync'
+    DATA_PATH = '/home/kartik17/SAFE_AI/check/smart-annotation-pointrcnn/app/test_dataset/0_drive_0064_sync'
     
     # create dataloader
     test_set = KittiRCNNDataset(root_dir=DATA_PATH, npoints=cfg.RPN.NUM_POINTS, split=cfg.TEST.SPLIT, mode=mode,
