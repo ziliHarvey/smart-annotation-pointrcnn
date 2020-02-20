@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import glob
-
+'''
 file_dir = "test_dataset/0_drive_0064_sync/sample/argoverse/lidar"
 bbox_dir = "PointCNN/output/rcnn/argo_config_sampling_trainfull/eval/epoch_no_number/sample/test_mode/final_result/data"
 seg_dir = "PointCNN/output/rcnn/argo_config_sampling_trainfull/eval/epoch_no_number/sample/test_mode/rpn_result/data"
@@ -24,3 +24,4 @@ for i in range(len(files)):
     seg_det = seg_dir + "/" + files[i] + ".npy"
     cmd_seg = "mv " + seg_src + " " + seg_det
     os.system(cmd_seg)
+'''

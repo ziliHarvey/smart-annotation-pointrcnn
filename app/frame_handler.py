@@ -29,10 +29,9 @@ class FrameHandler:
                                self.INPUT_BIN_DIR)
                 self.drives[drive] = []
                 for f in listdir(bin_dir):
+                    print(join(bin_dir, f),f)
                     if isfile(join(bin_dir, f)) and '.bin' in f:
                         self.drives[drive].append(f.split('.bin')[0])
-                    elif isfile(join(bin_dir, f)) and '.ply' in f:
-                        self.drives[drive].append(f.split('.ply')[0])
                 self.drives[drive] = sorted(self.drives[drive])
 
     def get_frame_names(self):
@@ -44,6 +43,15 @@ class FrameHandler:
 
         return str(self.drives)
 
+    def load_pc(pc_filepath):
+        full_data = PyntCloud.from_file(orig_lidar)
+        x = np.array(full_data.points.x)[:, np.newaxis]
+        y = np.array(full_data.points.y)[:, np.newaxis]
+        z = np.array(full_data.points.z)[:, np.newaxis]
+        full_data = np.concatenate([x,y,z], axis = 1)
+
+        return full_data
+
     def get_pointcloud(
         self,
         drivename,
@@ -53,6 +61,8 @@ class FrameHandler:
         ):
 
         seg_dir = "PointCNN/output/rcnn/argo_config_sampling_trainfull/eval/epoch_no_number/sample/test_mode/rpn_result/data"
+        data_dir = "test_dataset/0_drive_0064_sync/sample/argoverse/lidar"
+        orig_lidar = data_dir + "/" + fname + ".bin"
         seg_file = seg_dir + "/" + fname + ".npy"
         if not isfile(seg_file):
             # execute pointrcnn
@@ -62,9 +72,12 @@ class FrameHandler:
 
         data = None
         if isfile(seg_file):
+            full_data = np.fromfile(orig_lidar).reshape(-1,3).astype('float') 
             data = np.load(seg_file).reshape(-1, 5)[:, :4]
             data[np.isnan(data)] = .0
+            #full_data = load_pc(orig_lidar)
 
+            
         #bin_dir = join(self.DATASET_DIR, drivename, self.INPUT_BIN_DIR)
         #filename = join(bin_dir, fname.split('.')[0] + '.ply')
         #pc = PyntCloud.from_file(filename)
@@ -76,7 +89,7 @@ class FrameHandler:
             data = data.flatten(order='C').tolist()
             data_str = ','.join([str(x) for x in data])
             return data_str
-        return data
+        return full_data
 
     def load_annotation(
         self,

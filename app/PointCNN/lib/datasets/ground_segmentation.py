@@ -25,7 +25,7 @@ def ground_segmentation(pc,iter_cycle = 5, threshold = 0.3):
     world_points = pc_orig[:,:3][world_mask]
     ground_points = pc[:,:3]
 
-    return world_points
+    return world_points, ground_points
 
 def valid_region(pc,constraint):
 

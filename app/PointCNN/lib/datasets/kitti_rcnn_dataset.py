@@ -163,7 +163,7 @@ class KittiRCNNDataset(KittiDataset):
         return False
 
     @staticmethod
-    def get_valid_flag(pts_rect, pts_img, pts_rect_depth, img_shape):
+    def get_valid_flag(pts_rect):
         """
         Valid point should be in the lidar (and in the PC_AREA_SCOPE)
         :param pts_rect:
@@ -172,18 +172,13 @@ class KittiRCNNDataset(KittiDataset):
         :param img_shape:
         :return:
         """
-        val_flag_1 = np.logical_and(pts_img[:, 0] >= 0, pts_img[:, 0] < img_shape[1])
-        val_flag_2 = np.logical_and(pts_img[:, 1] >= 0, pts_img[:, 1] < img_shape[0])
-        val_flag_merge = np.logical_and(val_flag_1, val_flag_2)
-        pts_valid_flag = np.logical_and(val_flag_merge, pts_rect_depth >= 0)
 
         if cfg.PC_REDUCE_BY_RANGE:
             x_range, y_range, z_range = cfg.PC_AREA_SCOPE
             pts_x, pts_y, pts_z = pts_rect[:, 0], pts_rect[:, 1], pts_rect[:, 2]
-            range_flag = (pts_x >= x_range[0]) & (pts_x <= x_range[1]) \
+            pts_valid_flag = (pts_x >= x_range[0]) & (pts_x <= x_range[1]) \
                          & (pts_y >= y_range[0]) & (pts_y <= y_range[1]) \
                          & (pts_z >= z_range[0]) & (pts_z <= z_range[1])
-            pts_valid_flag = pts_valid_flag & range_flag
         return pts_valid_flag
 
     def __len__(self):
@@ -216,6 +211,8 @@ class KittiRCNNDataset(KittiDataset):
         pts_lidar = self.get_lidar(sample_id)
         # get valid point (projected points should be in lidar)
         pts_rect = pts_lidar[:, 0:3]
+        valid_mask = self.get_valid_flag(pts_rect)
+        pts_rect = pts_rect[valid_mask]
         pts_intensity = np.arange(pts_lidar.shape[0])
         
         

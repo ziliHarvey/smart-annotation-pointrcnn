@@ -22,10 +22,8 @@ import time
 from tensorboardX import SummaryWriter
 import tqdm
 
-argo_to_kitti = np.array([[6.927964e-03, -9.999722e-01, -2.757829e-03],
-                          [-1.162982e-03, 2.749836e-03, -9.999955e-01],
-                          [9.999753e-01, 6.931141e-03, -1.143899e-03]])
-
+argo_to_kitti = np.array([[0, -1, 0],[0, 0, -1],[1, 0, 0]])
+kitti_to_argo = np.array([[0, 0, 1],[-1, 0, 0],[0, -1, 0]])
 
 np.random.seed(1024)  # set the same seed
 
@@ -82,9 +80,9 @@ def save_kitti_format(sample_id, bbox3d, kitti_output_dir, scores, lidar_name_ta
             x, z, ry = bbox3d[k, 0], bbox3d[k, 2], bbox3d[k, 6]
             beta = np.arctan2(z, x)
             alpha = -np.sign(beta) * np.pi / 2 + beta + ry
-            bbox3d_argo = np.dot(np.linalg.inv(argo_to_kitti),np.array([bbox3d[k, 0], bbox3d[k, 1], bbox3d[k, 2]]).reshape(3,-1))
+            #bbox3d_argo = np.dot(kitti_to_argo,np.array([bbox3d[k, 0], bbox3d[k, 1], bbox3d[k, 2]]).reshape(3,-1))
             print('%s %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f' %
-                  (cfg.CLASSES, bbox3d[k, 3], bbox3d[k, 4], bbox3d[k, 5], bbox3d_argo[0][0], bbox3d_argo[1][0], bbox3d_argo[2][0],
+                  (cfg.CLASSES, bbox3d[k, 3], bbox3d[k, 4], bbox3d[k, 5], bbox3d[k,2], -bbox3d[k,0], -bbox3d[k,1],
                    (np.pi/2. - bbox3d[k, 6]), scores[k]), file=f)
 
 
@@ -211,7 +209,7 @@ def eval_one_epoch_rpn(model, dataloader, epoch_id, result_dir, logger):
                 if not args.test:
                     cur_gt_cls = cur_rpn_cls_label.cpu().numpy()
                     output_data = np.concatenate(
-                        (np.dot(np.linalg.inv(argo_to_kitti),cur_pts_rect.reshape(3, -1)).reshape(-1,3), cur_gt_cls.reshape(-1, 1), cur_pred_cls.reshape(-1, 1)), axis=1)
+                        (np.dot(kitti_to_argo,cur_pts_rect.reshape(3, -1)).reshape(-1,3), cur_gt_cls.reshape(-1, 1), cur_pred_cls.reshape(-1, 1)), axis=1)
                 else:
                     output_data = np.concatenate((cur_pts_rect.reshape(-1, 3), cur_pred_cls.reshape(-1, 1)), axis=1)
 
@@ -586,16 +584,13 @@ def eval_one_epoch_joint(model, dataloader, epoch_id, result_dir, logger):
 
             rpn_cls_np = ret_dict['rpn_cls'].cpu().numpy()
             rpn_xyz_np = ret_dict['backbone_xyz'].cpu().numpy()
-            rpn_xyz_np = np.dot(np.linalg.inv(argo_to_kitti),ret_dict['backbone_xyz'].cpu().numpy()[0].T).T.reshape(1, -1, 3)
+            rpn_xyz_np = np.concatenate([rpn_xyz_np[0][:,2].reshape(-1,1),-rpn_xyz_np[0][:,0].reshape(-1,1),-rpn_xyz_np[0][:,1].reshape(-1,1)], axis = 1).reshape(1,-1,3)
             seg_result_np = seg_result.cpu().numpy()
             output_data = np.concatenate((rpn_xyz_np, rpn_cls_np.reshape(batch_size, -1, 1),
                                           seg_result_np.reshape(batch_size, -1, 1)), axis=2)
 
             for k in range(batch_size):
                 cur_sample_id = sample_id[k]
-                #print(k,lidar_name_table['%06d'%cur_sample_id])
-                #calib = dataset.get_calib(cur_sample_id)
-                #image_shape = dataset.get_image_shape(cur_sample_id)
                 save_kitti_format(cur_sample_id,  roi_boxes3d_np[k], roi_output_dir,
                                   roi_scores_raw_np[k],lidar_name_table)
                 save_kitti_format(cur_sample_id,  pred_boxes3d_np[k], refine_output_dir,

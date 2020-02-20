@@ -18,12 +18,18 @@ class RPN(nn.Module):
 
         # classification branch
         cls_layers = []
+        # Assign pre channel with MLP neuron number
         pre_channel = cfg.RPN.FP_MLPS[0][-1]
         for k in range(0, cfg.RPN.CLS_FC.__len__()):
+        	# Append Classification layers with input --> pre_channel (128) and output --> (128), with Batch Norm
             cls_layers.append(pt_utils.Conv1d(pre_channel, cfg.RPN.CLS_FC[k], bn=cfg.RPN.USE_BN))
+            # Updates pre channel
             pre_channel = cfg.RPN.CLS_FC[k]
+
         cls_layers.append(pt_utils.Conv1d(pre_channel, 1, activation=None))
+        # Check for Drop Out Config Parameter
         if cfg.RPN.DP_RATIO >= 0:
+        	# Insert Dropout layer to 1th index
             cls_layers.insert(1, nn.Dropout(cfg.RPN.DP_RATIO))
         self.rpn_cls_layer = nn.Sequential(*cls_layers)
 
@@ -71,11 +77,12 @@ class RPN(nn.Module):
         :return:
         """
         pts_input = input_data['pts_input']
-        backbone_xyz, backbone_features = self.backbone_net(pts_input)  # (B, N, 3), (B, C, N)
-
-        rpn_cls = self.rpn_cls_layer(backbone_features).transpose(1, 2).contiguous()  # (B, N, 1)
+        backbone_xyz, backbone_features = self.backbone_net(pts_input)  # (B --> Batch, N --> Num of Pts, 3), (B, C--> 128, N)
+        rpn_cls = self.rpn_cls_layer(backbone_features).transpose(1, 2).contiguous()  # (B, N, 1) # Check if can make different class predictions
         rpn_reg = self.rpn_reg_layer(backbone_features).transpose(1, 2).contiguous()  # (B, N, C)
-
+        print(self.rpn_cls_layer)
+        print(self.rpn_reg_layer)
+        print(rpn_cls.shape, rpn_reg.shape, backbone_features.shape)
         ret_dict = {'rpn_cls': rpn_cls, 'rpn_reg': rpn_reg,
                     'backbone_xyz': backbone_xyz, 'backbone_features': backbone_features}
 
