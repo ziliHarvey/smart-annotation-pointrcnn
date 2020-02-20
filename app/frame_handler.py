@@ -31,6 +31,8 @@ class FrameHandler:
                 for f in listdir(bin_dir):
                     if isfile(join(bin_dir, f)) and '.bin' in f:
                         self.drives[drive].append(f.split('.bin')[0])
+                    elif isfile(join(bin_dir, f)) and '.ply' in f:
+                        self.drives[drive].append(f.split('.ply')[0])
                 self.drives[drive] = sorted(self.drives[drive])
 
     def get_frame_names(self):

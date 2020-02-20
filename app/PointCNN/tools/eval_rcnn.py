@@ -57,6 +57,8 @@ parser.add_argument("--rcnn_eval_feature_dir", type=str, default=None,
                     help='specify the saved features for rcnn evaluation when using rcnn_offline mode')
 parser.add_argument('--set', dest='set_cfgs', default=None, nargs=argparse.REMAINDER,
                     help='set extra config keys if needed')
+
+parser.add_argument("--eval_single_file", type=str, default=None, help="Evaluate a single file")
 args = parser.parse_args()
 
 
@@ -70,11 +72,12 @@ def create_logger(log_file):
     return logging.getLogger(__name__)
 
 
-def save_kitti_format(sample_id, bbox3d, kitti_output_dir, scores):
+def save_kitti_format(sample_id, bbox3d, kitti_output_dir, scores, lidar_name_table):
     corners3d = kitti_utils.boxes3d_to_corners3d(bbox3d)
-
-    kitti_output_file = os.path.join(kitti_output_dir, '%06d.txt' % sample_id)
-    with open(kitti_output_file, 'w') as f:
+    print("--------------------")
+    kitti_output_file = os.path.join(kitti_output_dir, lidar_name_table['%06d'%sample_id] + '.txt')
+    with open(kitti_output_file, 'w') as f: 
+        print(f)
         for k in range(bbox3d.shape[0]):
             x, z, ry = bbox3d[k, 0], bbox3d[k, 2], bbox3d[k, 6]
             beta = np.arctan2(z, x)
@@ -215,9 +218,7 @@ def eval_one_epoch_rpn(model, dataloader, epoch_id, result_dir, logger):
                 np.save(output_file, output_data.astype(np.float16))
 
                 # save as kitti format
-                calib = dataset.get_calib(cur_sample_id)
                 cur_boxes3d = cur_boxes3d.cpu().numpy()
-                image_shape = dataset.get_image_shape(cur_sample_id)
                 save_kitti_format(cur_sample_id, calib, cur_boxes3d, kitti_output_dir, cur_scores_raw, image_shape)
 
         disp_dict = {'mode': mode, 'recall': '%d/%d' % (total_recalled_bbox_list[3], total_gt_bbox),
@@ -361,13 +362,10 @@ def eval_one_epoch_rcnn(model, dataloader, epoch_id, result_dir, logger):
         progress_bar.set_postfix(disp_dict)
         progress_bar.update()
 
-        image_shape = dataset.get_image_shape(sample_id)
         if args.save_result:
             # save roi and refine results
             roi_boxes3d_np = roi_boxes3d.cpu().numpy()
             pred_boxes3d_np = pred_boxes3d.cpu().numpy()
-            calib = dataset.get_calib(sample_id)
-
             save_kitti_format(sample_id, calib, roi_boxes3d_np, roi_output_dir, roi_scores, image_shape)
             save_kitti_format(sample_id, calib, pred_boxes3d_np, refine_output_dir, raw_scores.cpu().numpy(),
                               image_shape)
@@ -389,7 +387,6 @@ def eval_one_epoch_rcnn(model, dataloader, epoch_id, result_dir, logger):
         scores_selected = raw_scores_selected[keep_idx]
         pred_boxes3d_selected, scores_selected = pred_boxes3d_selected.cpu().numpy(), scores_selected.cpu().numpy()
 
-        calib = dataset.get_calib(sample_id)
         final_total += pred_boxes3d_selected.shape[0]
         save_kitti_format(sample_id, calib, pred_boxes3d_selected, final_output_dir, scores_selected, image_shape)
 
@@ -482,6 +479,7 @@ def eval_one_epoch_joint(model, dataloader, epoch_id, result_dir, logger):
     total_recalled_bbox_list, total_gt_bbox = [0] * 5, 0
     total_roi_recalled_bbox_list = [0] * 5
     dataset = dataloader.dataset
+    lidar_name_table = dataset.lidar_name_table
     cnt = final_total = total_cls_acc = total_cls_acc_refined = total_rpn_iou = 0
 
     progress_bar = tqdm.tqdm(total=len(dataloader), leave=True, desc='eval')
@@ -595,14 +593,15 @@ def eval_one_epoch_joint(model, dataloader, epoch_id, result_dir, logger):
 
             for k in range(batch_size):
                 cur_sample_id = sample_id[k]
+                #print(k,lidar_name_table['%06d'%cur_sample_id])
                 #calib = dataset.get_calib(cur_sample_id)
                 #image_shape = dataset.get_image_shape(cur_sample_id)
                 save_kitti_format(cur_sample_id,  roi_boxes3d_np[k], roi_output_dir,
-                                  roi_scores_raw_np[k])
+                                  roi_scores_raw_np[k],lidar_name_table)
                 save_kitti_format(cur_sample_id,  pred_boxes3d_np[k], refine_output_dir,
-                                  raw_scores_np[k])
+                                  raw_scores_np[k],lidar_name_table)
 
-                output_file = os.path.join(rpn_output_dir, '%06d.npy' % cur_sample_id)
+                output_file = os.path.join(rpn_output_dir, lidar_name_table['%06d'%cur_sample_id] + '.npy')
                 np.save(output_file, output_data.astype(np.float32))
 
         # scores thresh
@@ -629,7 +628,7 @@ def eval_one_epoch_joint(model, dataloader, epoch_id, result_dir, logger):
             #calib = dataset.get_calib(cur_sample_id)
             final_total += pred_boxes3d_selected.shape[0]
             #image_shape = dataset.get_image_shape(cur_sample_id)
-            save_kitti_format(cur_sample_id, pred_boxes3d_selected, final_output_dir, scores_selected)
+            save_kitti_format(cur_sample_id, pred_boxes3d_selected, final_output_dir, scores_selected,lidar_name_table)
 
     progress_bar.close()
     # dump empty files

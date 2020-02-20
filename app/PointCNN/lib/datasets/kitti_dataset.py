@@ -18,7 +18,14 @@ class KittiDataset(torch_data.Dataset):
         self.lidar_dir = os.path.join(root_dir,"sample/argoverse/lidar")
         lidarfile_list = os.listdir(self.lidar_dir)
         
-        self.lidar_idx_list = [x.split('.')[0] for x in lidarfile_list]
+        self.lidar_idx_list = ['%06d'%l for l in range(len(lidarfile_list))]
+        self.lidar_names = [x.split('.')[0] for x in lidarfile_list]
+
+        self.lidar_file_extension = [x.split('.')[1] for x in lidarfile_list]
+        
+        self.lidar_name_table = dict(zip(self.lidar_idx_list, self.lidar_names))
+        self.lidar_ext__table = dict(zip(self.lidar_idx_list, self.lidar_file_extension))
+
         self.num_sample = self.lidar_idx_list.__len__()
         
         self.argo_to_kitti = np.array([[6.927964e-03, -9.999722e-01, -2.757829e-03],
@@ -28,10 +35,24 @@ class KittiDataset(torch_data.Dataset):
         self.ground_removal = True
         
     def get_lidar(self,idx):
-        lidar_file = os.path.join(self.lidar_dir,"%06d.bin"%idx)
+        ext = self.lidar_ext__table["%06d"%idx]
+        lidar_file = os.path.join(self.lidar_dir,self.lidar_name_table["%06d"%idx] + '.'+ ext )
+        
         assert os.path.exists(lidar_file)
         
-        pts_lidar = np.fromfile(lidar_file).reshape(-1,3)[:,:3]
+        if(ext == 'ply'):
+            data = PyntCloud.from_file(lidar_file)
+            x = np.array(data.points.x)[:, np.newaxis]
+            y = np.array(data.points.y)[:, np.newaxis]
+            z = np.array(data.points.z)[:, np.newaxis]
+            pts_lidar = np.concatenate([x,y,z], axis = 1)   
+
+        elif(ext == 'bin'):
+            pts_lidar = np.fromfile(lidar_file).reshape(-1,3)[:,:3]
+
+        else:
+            pass
+        
         if self.ground_removal: 
             pts_lidar = gs.ground_segmentation(pts_lidar)
         
