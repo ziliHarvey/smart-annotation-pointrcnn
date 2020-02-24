@@ -12,7 +12,7 @@ def preprocess():
     #print(script_dir)
     chdir(script_dir)
     system(pythonApp + script_seg)
-    #chdir(cur_dir)
+    chdir(cur_dir)
     #system(pythonApp)
     print("Processing data finishes................ enjoy!")
     print("==============================================")

@@ -42,7 +42,7 @@ def get_pointcnn_labels(filename, settingsControls, ground_removed=False, foregr
         # execute pointrcnn
         # currently have to run on the whole files to generate corresponding out
         # will be replaced by only inferencing on this specific file
-        preprocess();
+        preprocess()
     
     
     seg_points = np.load(seg_file).reshape(-1, 5)     

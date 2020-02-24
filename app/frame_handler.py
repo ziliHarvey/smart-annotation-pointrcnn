@@ -7,7 +7,7 @@ import numpy as np
 from models import Frame, fixed_annotation_error
 from pyntcloud import PyntCloud
 from preprocess import preprocess
-import open3d as o3d
+#import open3d as o3d
 
 
 # temporary script, will be replaced later
@@ -67,6 +67,8 @@ class FrameHandler:
         orig_lidar = data_dir + "/" + fname + ".ply"
         seg_file = seg_dir + "/" + fname + ".npy"
     
+        print(fname)
+        print("8**********************************")
         if not isfile(seg_file):
             # execute pointrcnn
             # currently have to run on the whole files to generate corresponding out
