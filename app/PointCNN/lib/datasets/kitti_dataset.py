@@ -9,6 +9,7 @@ import lib.datasets.ground_segmentation as gs
 from pyntcloud import PyntCloud
 import random
 import copy
+import open3d as o3d
 
 
 class KittiDataset(torch_data.Dataset):
@@ -19,6 +20,7 @@ class KittiDataset(torch_data.Dataset):
         lidarfile_list = os.listdir(self.lidar_dir)
         
         self.lidar_idx_list = ['%06d'%l for l in range(len(lidarfile_list))]
+        
         self.lidar_names = [x.split('.')[0] for x in lidarfile_list]
 
         self.lidar_file_extension = [x.split('.')[1] for x in lidarfile_list]
@@ -49,6 +51,12 @@ class KittiDataset(torch_data.Dataset):
 
         elif(ext == 'bin'):
             pts_lidar = np.fromfile(lidar_file).reshape(-1,3)[:,:3].astype('float32')
+            x = pts_lidar[:,0].reshape(-1,1)
+            y = pts_lidar[:,1].reshape(-1,1)
+            z = pts_lidar[:,2].reshape(-1,1)
+            pts_lidar = np.concatenate([-y,-z,x], axis = 1)
+        elif(ext == 'pcd'):
+            pts_lidar = np.asarray(o3d.io.read_point_cloud(lidar_file).points).astype('float32')
             x = pts_lidar[:,0].reshape(-1,1)
             y = pts_lidar[:,1].reshape(-1,1)
             z = pts_lidar[:,2].reshape(-1,1)

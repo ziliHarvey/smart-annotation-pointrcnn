@@ -7,6 +7,7 @@ import numpy as np
 from models import Frame, fixed_annotation_error
 from pyntcloud import PyntCloud
 from preprocess import preprocess
+import open3d as o3d
 
 
 # temporary script, will be replaced later
@@ -30,8 +31,8 @@ class FrameHandler:
                 self.drives[drive] = []
                 for f in listdir(bin_dir):
                     print(join(bin_dir, f),f)
-                    if isfile(join(bin_dir, f)) and '.bin' in f:
-                        self.drives[drive].append(f.split('.bin')[0])
+                    if isfile(join(bin_dir, f)) and '.ply' in f:
+                        self.drives[drive].append(f.split('.ply')[0])
                 self.drives[drive] = sorted(self.drives[drive])
 
     def get_frame_names(self):
@@ -43,8 +44,9 @@ class FrameHandler:
 
         return str(self.drives)
 
-    def load_pc(pc_filepath):
-        full_data = PyntCloud.from_file(orig_lidar)
+    
+    def load_pc(self,pc_filepath):
+        full_data = PyntCloud.from_file(pc_filepath)
         x = np.array(full_data.points.x)[:, np.newaxis]
         y = np.array(full_data.points.y)[:, np.newaxis]
         z = np.array(full_data.points.z)[:, np.newaxis]
@@ -62,19 +64,27 @@ class FrameHandler:
 
         seg_dir = "PointCNN/output/rcnn/argo_config_sampling_trainfull/eval/epoch_no_number/sample/test_mode/rpn_result/data"
         data_dir = "test_dataset/0_drive_0064_sync/sample/argoverse/lidar"
-        orig_lidar = data_dir + "/" + fname + ".bin"
+        orig_lidar = data_dir + "/" + fname + ".ply"
         seg_file = seg_dir + "/" + fname + ".npy"
+    
         if not isfile(seg_file):
             # execute pointrcnn
             # currently have to run on the whole files to generate corresponding out
-            # will be replaced by only inferencing on this specific file
+            # will be replaced by only inferencing on this specific fil
             preprocess()
 
-        data = None
+        full_data = None
         if isfile(seg_file):
-            full_data = np.fromfile(orig_lidar).reshape(-1,3).astype('float') 
-            data = np.load(seg_file).reshape(-1, 5)[:, :4]
-            data[np.isnan(data)] = .0
+            #full_data = np.fromfile(orig_lidar).astype('float32').reshape(-1,3) 
+            
+            #data = np.load(seg_file).reshape(-1, 5)
+            #data[np.isnan(data)] = .0
+            pts_lidar = self.load_pc(orig_lidar)#np.asarray(o3d.io.read_point_cloud(orig_lidar).points).astype('float32')
+            #x = pts_lidar[:,0].reshape(-1,1)
+            #y = pts_lidar[:,1].reshape(-1,1)
+            #z = pts_lidar[:,2].reshape(-1,1)
+            #full_data = np.concatenate([x,y,z], axis = 1)
+            full_data = np.hstack((pts_lidar,np.arange(pts_lidar.shape[0]).reshape(-1,1)))
             #full_data = load_pc(orig_lidar)
 
             
@@ -85,8 +95,9 @@ class FrameHandler:
         #print(data)
         #data[np.isnan(data)] = .0
         #print(data.dtype)
+        
         if dtype == str:
-            data = data.flatten(order='C').tolist()
+            data = full_data.flatten(order='C').tolist()
             data_str = ','.join([str(x) for x in data])
             return data_str
         return full_data

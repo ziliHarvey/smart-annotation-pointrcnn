@@ -72,10 +72,8 @@ def create_logger(log_file):
 
 def save_kitti_format(sample_id, bbox3d, kitti_output_dir, scores, lidar_name_table):
     corners3d = kitti_utils.boxes3d_to_corners3d(bbox3d)
-    print("--------------------")
     kitti_output_file = os.path.join(kitti_output_dir, lidar_name_table['%06d'%sample_id] + '.txt')
     with open(kitti_output_file, 'w') as f: 
-        print(f)
         for k in range(bbox3d.shape[0]):
             x, z, ry = bbox3d[k, 0], bbox3d[k, 2], bbox3d[k, 6]
             beta = np.arctan2(z, x)
@@ -891,7 +889,7 @@ def filtrate_gtboxes(gt_boxes):
                 
         verified_gt_boxes.append(batch_label)
     verified_gt_boxes = np.array(verified_gt_boxes)
-    print(gt_boxes.shape, verified_gt_boxes.shape)
+    #print(gt_boxes.shape, verified_gt_boxes.shape)
     return verified_gt_boxes
 
 
