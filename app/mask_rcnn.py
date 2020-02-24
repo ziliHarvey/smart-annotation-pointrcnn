@@ -28,7 +28,7 @@ def get_pointcnn_labels_axcrf(filename):
 def get_pointcnn_labels(filename, settingsControls, ground_removed=False, foreground_only=True):
     
     
-    print("please wait....", filename)
+    #print("please wait....", filename)
 
     seg_dir = "PointCNN/output/rcnn/argo_config_sampling_trainfull/eval/epoch_no_number/sample/test_mode/rpn_result/data"
     data_dir = "test_dataset/0_drive_0064_sync/sample/argoverse/lidar"

@@ -9,7 +9,7 @@ def preprocess():
     print("Processing data begines......................")
     cur_dir = getcwd()
     script_dir = os.path.join(cur_dir,'PointCNN/tools')
-    print(script_dir)
+    #print(script_dir)
     chdir(script_dir)
     system(pythonApp + script_seg)
     #chdir(cur_dir)

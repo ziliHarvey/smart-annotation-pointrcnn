@@ -30,7 +30,7 @@ class FrameHandler:
                                self.INPUT_BIN_DIR)
                 self.drives[drive] = []
                 for f in listdir(bin_dir):
-                    print(join(bin_dir, f),f)
+                    #print(join(bin_dir, f),f)
                     if isfile(join(bin_dir, f)) and '.ply' in f:
                         self.drives[drive].append(f.split('.ply')[0])
                 self.drives[drive] = sorted(self.drives[drive])
