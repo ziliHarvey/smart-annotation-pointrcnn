@@ -858,7 +858,7 @@ def create_dataloader(logger):
     mode = 'TEST' if args.test else 'EVAL'
     #DATA_PATH = os.path.join('..', 'data')
     # calls from app/frame_handler
-    DATA_PATH = '/home/kartik17/SAFE_AI/check/smart-annotation-pointrcnn/app/test_dataset/0_drive_0064_sync'
+    DATA_PATH = '../../test_dataset/0_drive_0064_sync'
     
     # create dataloader
     test_set = KittiRCNNDataset(root_dir=DATA_PATH, npoints=cfg.RPN.NUM_POINTS, split=cfg.TEST.SPLIT, mode=mode,
