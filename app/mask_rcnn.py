@@ -5,7 +5,7 @@ import os.path
 import time
 import random
 from preprocess import preprocess
-import open3d as o3d
+from pyntcloud import PyntCloud
 
 
 pythonApp = "python "
@@ -47,10 +47,10 @@ def get_pointcnn_labels(filename, settingsControls, ground_removed=False, foregr
     
     seg_points = np.load(seg_file).reshape(-1, 5)     
     mask_foreground = (seg_points[:,-1] == 1)
-    pts_lidar = np.asarray(o3d.io.read_point_cloud(orig_lidar).points).astype('float64')
-    x = pts_lidar[:,0].reshape(-1,1)
-    y = pts_lidar[:,1].reshape(-1,1)
-    z = pts_lidar[:,2].reshape(-1,1)
+    pts_lidar = PyntCloud.from_file(orig_lidar)
+    x = np.array(pts_lidar.points.x)[:, np.newaxis]
+    y = np.array(pts_lidar.points.y)[:, np.newaxis]
+    z = np.array(pts_lidar.points.z)[:, np.newaxis]
     full_data = np.concatenate([x,y,z], axis = 1)
 
 
