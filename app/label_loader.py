@@ -28,4 +28,4 @@ if __name__ == "__main__":
     # in LiDAR's frame
     detections_dir = "PointCNN/output/rpn/argo_config_sampling_trainfull/eval/epoch_no_number/sample/test_mode/detections/data"
     label_path = detections_dir + "/000000.txt"
-    print(get_label_anno(label_path)) 
+    #print(get_label_anno(label_path)) 

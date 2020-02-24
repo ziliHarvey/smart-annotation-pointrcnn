@@ -7,3 +7,5 @@ app/PointCNN/output/
 *.bin
 .ipynb
 *.ipynb
+*.npy
+*.txt

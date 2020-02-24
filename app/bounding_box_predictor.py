@@ -228,12 +228,16 @@ class BoundingBoxPredictor():
         ground_removed  = json_request["settingsControls"]["GroundRemoval"]
         is_guided_tracking  = json_request["settingsControls"]["GuidedTracking"]
         
+
+        # Get Foreground mask
         car_points = get_pointcnn_labels(drivename+"/"+next_fname, json_request["settingsControls"], ground_removed=ground_removed)
         
-        next_all_pc_fresh = self.frame_handler.get_pointcloud(drivename, next_fname, dtype=float, ground_removed=ground_removed)
-        
+        # Full_pc, segmented_pc
+        next_all_pc_fresh  = self.frame_handler.get_pointcloud(drivename, next_fname, dtype=float, ground_removed=ground_removed)
+
+        # Foreground Points
         next_pc = np.copy(next_all_pc_fresh[car_points])
-        
+
         z_axis = np.max(next_pc[:,2]) # Ground already removed
         
         next_all_pc = np.copy(next_all_pc_fresh[next_all_pc_fresh[:,2]> z_axis-3 ])

@@ -5,92 +5,74 @@ import lib.utils.calibration as calibration
 import lib.utils.kitti_utils as kitti_utils
 from PIL import Image
 import argoverse
-from argoverse.data_loading.argoverse_tracking_loader import ArgoverseTrackingLoader
 import lib.datasets.ground_segmentation as gs
 from pyntcloud import PyntCloud
 import random
+import copy
+#import open3d as o3d
 
 
 class KittiDataset(torch_data.Dataset):
     def __init__(self, root_dir, split='train'):
         self.split = split
-        is_test = (self.split == 'test')
-        self.lidar_pathlist = []
-        self.label_pathlist = []
+        is_test = self.split == 'test'
+        self.lidar_dir = os.path.join(root_dir,"sample/argoverse/lidar")
+        lidarfile_list = os.listdir(self.lidar_dir)
         
-        if split == 'train':
-            for i in np.arange(1,5):
-                self.imageset_dir = os.path.join(root_dir,split+str(i))
-                data_loader = ArgoverseTrackingLoader(os.path.join(root_dir,split+str(i)))
-                self.log_list = data_loader.log_list
-                for log in self.log_list:
-                    self.lidar_pathlist.extend(data_loader.get(log).lidar_list)
-                    self.label_pathlist.extend(data_loader.get(log).label_list)
-                print(len(self.lidar_pathlist))
-        else:
-            self.imageset_dir = os.path.join(root_dir,split)
-            data_loader = ArgoverseTrackingLoader(os.path.join(root_dir,split))
-            self.lidar_pathlist.extend(data_loader.lidar_list)
-            self.label_pathlist.extend(data_loader.label_list)
+        self.lidar_idx_list = ['%06d'%l for l in range(len(lidarfile_list))]
         
-        
-        self.calib_file = data_loader.calib_filename
-        
-        assert len(self.lidar_pathlist) == len(self.label_pathlist)
-        #z = list(zip(self.lidar_pathlist, self.label_pathlist))
-        #random.shuffle(z)
-        #self.lidar_pathlist[:], self.label_pathlist[:] = zip(*z)
+        self.lidar_names = [x.split('.')[0] for x in lidarfile_list]
 
-        self.num_sample = len(self.lidar_pathlist)
-        self.image_idx_list = np.arange(self.num_sample)
+        self.lidar_file_extension = [x.split('.')[1] for x in lidarfile_list]
         
-        self.argo_to_kitti = np.array([[6.927964e-03, -9.999722e-01, -2.757829e-03],
-                                       [-1.162982e-03, 2.749836e-03, -9.999955e-01],
-                                       [9.999753e-01, 6.931141e-03, -1.143899e-03]])
+        self.lidar_name_table = dict(zip(self.lidar_idx_list, self.lidar_names))
+        self.lidar_ext__table = dict(zip(self.lidar_idx_list, self.lidar_file_extension))
 
-        self.ground_removal = True
+        self.num_sample = self.lidar_idx_list.__len__()
         
-        self.image_dir = os.path.join('/data/')
-        self.lidar_dir = os.path.join('/data/')
-        self.calib_dir = os.path.join('/data/')
-        self.label_dir = os.path.join('/data/')
+        self.argo_to_kitti = np.array([[0, -1, 0],
+                                       [0, 0, -1],
+                                       [1, 0, 0]])
+
+        self.ground_removal = False
         
     def get_lidar(self,idx):
-        lidar_file = self.lidar_pathlist[idx]
+        ext = self.lidar_ext__table["%06d"%idx]
+        lidar_file = os.path.join(self.lidar_dir,self.lidar_name_table["%06d"%idx] + '.'+ ext )
+        
         assert os.path.exists(lidar_file)
         
-        
-        data = PyntCloud.from_file(lidar_file)
-        x = np.array(data.points.x)[:, np.newaxis]
-        y = np.array(data.points.y)[:, np.newaxis]
-        z = np.array(data.points.z)[:, np.newaxis]
-        pts_lidar = np.concatenate([x,y,z], axis = 1)
+        if(ext == 'ply'):
+            data = PyntCloud.from_file(lidar_file)
+            x = np.array(data.points.x)[:, np.newaxis]
+            y = np.array(data.points.y)[:, np.newaxis]
+            z = np.array(data.points.z)[:, np.newaxis]
+            pts_lidar = np.concatenate([-y,-z,x], axis = 1)   
+
+        elif(ext == 'bin'):
+            pts_lidar = np.fromfile(lidar_file).reshape(-1,3)[:,:3].astype('float32')
+            x = pts_lidar[:,0].reshape(-1,1)
+            y = pts_lidar[:,1].reshape(-1,1)
+            z = pts_lidar[:,2].reshape(-1,1)
+            pts_lidar = np.concatenate([-y,-z,x], axis = 1)
+        elif(ext == 'pcd'):
+            #pts_lidar = np.asarray(o3d.io.read_point_cloud(lidar_file).points).astype('float32')
+            pts_lidar = PyntCloud.from_file(lidar_file)
+            x = pts_lidar[:,0].reshape(-1,1)
+            y = pts_lidar[:,1].reshape(-1,1)
+            z = pts_lidar[:,2].reshape(-1,1)
+            pts_lidar = np.concatenate([-y,-z,x], axis = 1)
+
+        else:
+            pass
         
         if self.ground_removal: 
-            pts_lidar = gs.ground_segmentation(pts_lidar)
+            pts_lidar, ground_pts = gs.ground_segmentation(pts_lidar)
         
-        pts_lidar = np.dot(self.argo_to_kitti,pts_lidar.T).T
-        
+
+
+        #pts_lidar = np.dot(self.argo_to_kitti,pts_lidar.T).T
+        #pts_lidar = np.dot(self.argo_to_kitti,pts_lidar.T).T
+
+
         return pts_lidar
-        
-        
-    def get_label(self,idx):
-        
-        label_file = self.label_pathlist[idx]
-        assert os.path.exists(label_file)
-        
-        return kitti_utils.get_objects_from_label(label_file)
-    
-    def get_calib(self, idx):
-        # Single Calibration File for All, One Calib to Rule them all
-        assert os.path.exists(self.calib_file)
-        return calibration.Calibration(self.calib_file)
-
-    def get_image_shape(self, idx):
-        return 1200, 1920, 3
-    
-    def __len__(self):
-        raise NotImplementedError
-
-    def __getitem__(self, item):
-        raise NotImplementedError
