@@ -13,7 +13,10 @@ def preprocess():
     chdir(script_dir)
     system(pythonApp + script_seg)
     chdir(cur_dir)
+<<<<<<< HEAD
     print(cur_dir)
+=======
+>>>>>>> 557691cf7b23439bd1e9ef213284ff5f5e1b26b9
     #system(pythonApp)
     print("Processing data finishes................ enjoy!")
     print("==============================================")
