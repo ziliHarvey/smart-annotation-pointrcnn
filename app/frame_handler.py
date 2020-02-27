@@ -7,7 +7,7 @@ import numpy as np
 from models import Frame, fixed_annotation_error
 from pyntcloud import PyntCloud
 from preprocess import preprocess
-import open3d as o3d
+
 
 
 # temporary script, will be replaced later

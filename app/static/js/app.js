@@ -333,6 +333,10 @@ function App() {
             */
 
            var car_height = Math.min(Math.abs(bbox_max.y - bbox_min.y), 5);
+           console.log('car_height: ' + car_height);
+           console.log('Maxy - Miny: ' + (Math.abs(bbox_max.y - bbox_min.y)));
+           
+
            selectedBox.height = car_height;
            if(selectedBox.bbox3d){
                selectedBox.bbox3d.max.y = bbox_min.y + car_height;
@@ -605,12 +609,12 @@ function App() {
                                 0,
                                 json_box.corner2[0]);
                             
-                            
+                            //console.log("Height " + json_box['height']);
                             var box = createAndDrawBox(corner1,
                                 corner2,
                                 json_box['angle']);
                             box.object_id = json_box['object_id'];
-                            
+                            box.height = json_box['height'];
                             var is_box_deleted = false;
                             for (var i_box = app.cur_frame.bounding_boxes.length - 1; i_box >= 0; i_box--) {
                                 existBox = app.cur_frame.bounding_boxes[i_box];
