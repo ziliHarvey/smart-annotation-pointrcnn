@@ -11,7 +11,7 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper) {
     this.height = false; // cursor
     this.y_max = false;
     this.tracking_idx = 0;
-    
+    this.half_h = 0;
     this.predicted_state = [0, 0, 1, 1, 1, 1]; // x, y, , vx, vy, ax, ay
     this.predicted_error =  [1, 1, 1, 1, 1, 1]; // x, y, , vx, vy, ax, ay
     
@@ -151,7 +151,7 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper) {
 
 
             var car_height = y_max - y_min;
-
+            this.half_h = (y_max + y_min) / 2.0;
 
 
             //console.log(":::", y_max, y_min, length, width);
@@ -870,17 +870,17 @@ function OutputBox(box) {
     
     this.predicted_error = box.predicted_error;    
     this.predicted_state = box.predicted_state;     
-    this.tracking_idx = box.tracking_idx;  
-    /*
-    
-    var dt = 0.1;
-    var v_x = (center.z - box.predicted_state[0]) / dt;
-    var v_y = (center.x - box.predicted_state[1]) / dt;
-    
-    var a_x = (v_x - box.predicted_state[2]) / dt;
-    var a_y = (v_y - box.predicted_state[3]) / dt;
-        
-    this.predicted_state = [box.predicted_state[0], box.predicted_state[1], v_x, v_y, a_x, a_y];
-    
-    */
+    this.tracking_idx = box.tracking_idx;
+
+    // kitti-format conversion traffic 21
+    // id, class, x, y, z, theta, l, w, h
+    this.kitti_id = box.id;
+    this.kitti_class = box.object_id;
+    this.kitti_x = (v1.z+v2.z)/2.0;
+    this.kitti_y = (v1.x+v2.x)/2.0; 
+    this.kitti_z = box.half_h;
+    this.kitti_theta = box.angle;
+    this.kitti_length = this.length; 
+    this.w =  this.width;
+    this.h =  this.height;
 }
