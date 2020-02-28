@@ -610,7 +610,7 @@ function App() {
                                 corner2,
                                 json_box['angle']);
                             box.object_id = json_box['object_id'];
-                            
+                            box.height = json_box['height'];
                             var is_box_deleted = false;
                             for (var i_box = app.cur_frame.bounding_boxes.length - 1; i_box >= 0; i_box--) {
                                 existBox = app.cur_frame.bounding_boxes[i_box];

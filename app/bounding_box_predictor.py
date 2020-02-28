@@ -150,7 +150,7 @@ class BoundingBoxPredictor():
             bounding_box["width"] = w
             bounding_box["length"] = l
             # <todo> how to use output height instead of default calculared height            
-            #bounding_box["height"] = h
+            bounding_box["height"] = h
 
             # top right corner
             corner1_y = center_y - w/2 * np.cos(theta) + l/2 * np.sin(theta)
