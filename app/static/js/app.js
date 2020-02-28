@@ -1435,8 +1435,9 @@ function App() {
 }
 
 function parsePythonJSON(json) {
+    //json = JSON.stringify(json);
     return JSON.parse(json.split("\'").join("\"").split("False").join("false").split("True").join("true"));
-}
+    }
 
 function show(frame) {
     var initPointCloud;
