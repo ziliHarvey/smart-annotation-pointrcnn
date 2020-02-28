@@ -870,7 +870,7 @@ function OutputBox(box) {
     this.kitti_y = (v1.x+v2.x)/2.0; 
     this.kitti_z = box.half_h;
     this.kitti_theta = box.angle;
-    this.kitti_length = this.length; 
-    this.w =  this.width;
-    this.h =  this.height;
+    this.kitti_l = this.length; 
+    this.kitti_w =  this.width;
+    this.kitti_h =  this.height;
 }
