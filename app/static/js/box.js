@@ -827,6 +827,27 @@ Box.parseJSON = function(json_boxes) {
     return bounding_boxes;
 }
 
+function getCenterHeight(box) {
+    //console.log("**********************");
+    //console.log(box.half_h);
+    if (!isNaN(box.half_h))
+        return box.half_h;
+    //console.log("NANANANANAN");
+    var py = [];
+    var vertices= app.cur_frame.data;
+    var k = 0;
+    for ( var i = 0, l = vertices.length / DATA_STRIDE; i < l; i ++ ) { 
+        var v = new THREE.Vector3( vertices[ DATA_STRIDE * k + 1 ],
+                 0, vertices[ DATA_STRIDE * k ] );
+         if (v && containsPoint(box, v)) {
+            py.push(vertices[ DATA_STRIDE * k + 2 ]);
+        }
+        k++;
+    } 
+    var y_min = Math.min(...py);
+    return y_min + box.height/2.0;
+}
+
 
 function OutputBox(box) {
     /*
@@ -868,7 +889,7 @@ function OutputBox(box) {
     this.kitti_class = box.object_id;
     this.kitti_x = (v1.z+v2.z)/2.0;
     this.kitti_y = (v1.x+v2.x)/2.0; 
-    this.kitti_z = box.half_h;
+    this.kitti_z = getCenterHeight(box);
     this.kitti_theta = box.angle;
     this.kitti_l = this.length; 
     this.kitti_w =  this.width;
