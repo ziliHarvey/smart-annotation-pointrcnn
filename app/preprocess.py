@@ -9,15 +9,14 @@ def preprocess():
     print("Processing data begines......................")
     cur_dir = getcwd()
     script_dir = os.path.join(cur_dir,'PointCNN/tools')
-    #print(script_dir)
     chdir(script_dir)
-    system(pythonApp + script_seg)
-    chdir(cur_dir)
-<<<<<<< HEAD
-    print(cur_dir)
-=======
->>>>>>> 557691cf7b23439bd1e9ef213284ff5f5e1b26b9
-    #system(pythonApp)
-    print("Processing data finishes................ enjoy!")
-    print("==============================================")
-    print("==============================================")
+    try:
+        system(pythonApp + script_seg)
+        print("Processing data finishes................ enjoy!")
+        print("==============================================")
+        print("==============================================")
+    except Exception as e:
+        raise "Error"
+    finally:
+        chdir(cur_dir)
+    

@@ -55,13 +55,6 @@ class KittiDataset(torch_data.Dataset):
             y = pts_lidar[:,1].reshape(-1,1)
             z = pts_lidar[:,2].reshape(-1,1)
             pts_lidar = np.concatenate([-y,-z,x], axis = 1)
-        elif(ext == 'pcd'):
-            #pts_lidar = np.asarray(o3d.io.read_point_cloud(lidar_file).points).astype('float32')
-            pts_lidar = PyntCloud.from_file(lidar_file)
-            x = pts_lidar[:,0].reshape(-1,1)
-            y = pts_lidar[:,1].reshape(-1,1)
-            z = pts_lidar[:,2].reshape(-1,1)
-            pts_lidar = np.concatenate([-y,-z,x], axis = 1)
 
         else:
             pass
