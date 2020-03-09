@@ -1,15 +1,8 @@
 import os
 import numpy as np
 import torch.utils.data as torch_data
-import lib.utils.calibration as calibration
-import lib.utils.kitti_utils as kitti_utils
-from PIL import Image
-import argoverse
 import lib.datasets.ground_segmentation as gs
 from pyntcloud import PyntCloud
-import random
-import copy
-#import open3d as o3d
 
 
 class KittiDataset(torch_data.Dataset):
@@ -41,7 +34,8 @@ class KittiDataset(torch_data.Dataset):
         lidar_file = os.path.join(self.lidar_dir,self.lidar_name_table["%06d"%idx] + '.'+ ext )
         
         assert os.path.exists(lidar_file)
-        
+        pts_lidar = None
+
         if(ext == 'ply'):
             data = PyntCloud.from_file(lidar_file)
             x = np.array(data.points.x)[:, np.newaxis]
@@ -50,7 +44,7 @@ class KittiDataset(torch_data.Dataset):
             pts_lidar = np.concatenate([-y,-z,x], axis = 1)   
 
         elif(ext == 'bin'):
-            pts_lidar = np.fromfile(lidar_file).reshape(-1,3)[:,:3].astype('float32')
+            pts_lidar = np.fromfile(lidar_file,'float32').reshape(-1,3)[:,:3]
             x = pts_lidar[:,0].reshape(-1,1)
             y = pts_lidar[:,1].reshape(-1,1)
             z = pts_lidar[:,2].reshape(-1,1)
