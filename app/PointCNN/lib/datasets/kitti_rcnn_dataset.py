@@ -209,10 +209,14 @@ class KittiRCNNDataset(KittiDataset):
     def get_rpn_sample(self, index):
         sample_id = int(self.sample_id_list[index])
         pts_lidar = self.get_lidar(sample_id)
+        
         # get valid point (projected points should be in lidar)
-        pts_rect = pts_lidar[:, 0:3]
-        valid_mask = self.get_valid_flag(pts_rect)
-        pts_rect = pts_rect[valid_mask]
+        pts_orig = pts_lidar[:, 0:3]
+        valid_mask = self.get_valid_flag(pts_orig)
+        
+        pts_rect = pts_orig[valid_mask]
+        pts_left = pts_orig[~valid_mask]
+
         pts_intensity = np.arange(pts_lidar.shape[0])
         
         
@@ -251,13 +255,17 @@ class KittiRCNNDataset(KittiDataset):
 
         sample_info = {'sample_id': sample_id, 'random_select': self.random_select}
 
+        rem_index = np.setdiff1d(np.arange(pts_rect.shape[0]),choice)
+
         if self.mode == 'TEST':
             if cfg.RPN.USE_INTENSITY:
                 pts_input = np.concatenate((ret_pts_rect, ret_pts_features), axis=1)  # (N, C)
             else:
                 pts_input = ret_pts_rect
+                print(pts_input.shape,rem_index.shape,pts_left.shape)
                 sample_info['pts_input'] = pts_input
-                sample_info['pts_rect'] = ret_pts_rect
+                sample_info['rem_pts'] = pts_left
+                sample_info['pts_rect']  = ret_pts_rect
                 sample_info['pts_features'] = ret_pts_features
                 return sample_info
 
@@ -283,6 +291,7 @@ class KittiRCNNDataset(KittiDataset):
         rpn_cls_label, rpn_reg_label = self.generate_rpn_training_labels(aug_pts_rect, aug_gt_boxes3d)
         sample_info['pts_input'] = pts_input
         sample_info['pts_rect'] = aug_pts_rect
+        sample_info['rem_pts'] = np.vstack((pts_left, pts_rect[rem_index,:]))
         sample_info['pts_features'] = ret_pts_features
         sample_info['rpn_cls_label'] = rpn_cls_label
         sample_info['rpn_reg_label'] = rpn_reg_label

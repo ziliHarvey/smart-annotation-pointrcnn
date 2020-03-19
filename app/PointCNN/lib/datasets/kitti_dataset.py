@@ -16,7 +16,7 @@ class KittiDataset(torch_data.Dataset):
         
         self.lidar_names = [x.split('.')[0] for x in lidarfile_list]
 
-        self.lidar_file_extension = [x.split('.')[1] for x in lidarfile_list]
+        self.lidar_file_extension = [x.split('.')[-1] for x in lidarfile_list]
         
         self.lidar_name_table = dict(zip(self.lidar_idx_list, self.lidar_names))
         self.lidar_ext__table = dict(zip(self.lidar_idx_list, self.lidar_file_extension))
@@ -32,7 +32,6 @@ class KittiDataset(torch_data.Dataset):
     def get_lidar(self,idx):
         ext = self.lidar_ext__table["%06d"%idx]
         lidar_file = os.path.join(self.lidar_dir,self.lidar_name_table["%06d"%idx] + '.'+ ext )
-        
         assert os.path.exists(lidar_file)
         pts_lidar = None
 
@@ -44,10 +43,21 @@ class KittiDataset(torch_data.Dataset):
             pts_lidar = np.concatenate([-y,-z,x], axis = 1)   
 
         elif(ext == 'bin'):
-            pts_lidar = np.fromfile(lidar_file,'float32').reshape(-1,3)[:,:3]
-            x = pts_lidar[:,0].reshape(-1,1)
-            y = pts_lidar[:,1].reshape(-1,1)
-            z = pts_lidar[:,2].reshape(-1,1)
+            pts_lidar = np.fromfile(lidar_file,'float32')
+            if(pts_lidar.shape[0] % 3 ==0):
+                pts_lidar = pts_lidar.reshape(-1,3)[:,:3]
+                x = pts_lidar[:,0].reshape(-1,1)
+                y = pts_lidar[:,1].reshape(-1,1)
+                z = pts_lidar[:,2].reshape(-1,1)
+            # Intensity column --> Currently Hesai Data --> Original [y,x,z]
+            elif(pts_lidar.shape[0] % 4 ==0):
+                pts_lidar = pts_lidar.reshape(-1,4)[:,:3]
+                y = pts_lidar[:,0].reshape(-1,1)
+                x = pts_lidar[:,1].reshape(-1,1)
+                z = pts_lidar[:,2].reshape(-1,1)
+            else:
+                pts_lidar = None
+                print("bin File Though has greated than 3 and 4 columns")
             pts_lidar = np.concatenate([-y,-z,x], axis = 1)
 
         else:
@@ -56,10 +66,4 @@ class KittiDataset(torch_data.Dataset):
         if self.ground_removal: 
             pts_lidar, ground_pts = gs.ground_segmentation(pts_lidar)
         
-
-
-        #pts_lidar = np.dot(self.argo_to_kitti,pts_lidar.T).T
-        #pts_lidar = np.dot(self.argo_to_kitti,pts_lidar.T).T
-
-
         return pts_lidar
