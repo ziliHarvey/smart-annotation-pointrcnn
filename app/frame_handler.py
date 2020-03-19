@@ -37,7 +37,6 @@ class FrameHandler:
                     extension = f.split('.')[-1]
                     if isfile(join(bin_dir, f)) and (extension in self.EXT_LIST):
                         self.drives[drive].append(name)
-                        print(name)
                 self.drives[drive] = sorted(self.drives[drive])
 
     def get_frame_names(self):
@@ -60,7 +59,6 @@ class FrameHandler:
         seg_dir = "PointCNN/output/rcnn/argo_config_sampling_trainfull/eval/epoch_no_number/sample/test_mode/rpn_result/data"
         seg_file = seg_dir + "/" + fname + ".npy"
     
-        print(seg_file)
         if not isfile(seg_file):
             # execute pointrcnn
             # currently have to run on the whole files to generate corresponding out,

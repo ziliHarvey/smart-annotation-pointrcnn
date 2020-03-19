@@ -44,20 +44,14 @@ class KittiDataset(torch_data.Dataset):
 
         elif(ext == 'bin'):
             pts_lidar = np.fromfile(lidar_file,'float32')
-            if(pts_lidar.shape[0] % 3 ==0):
-                pts_lidar = pts_lidar.reshape(-1,3)[:,:3]
-                x = pts_lidar[:,0].reshape(-1,1)
-                y = pts_lidar[:,1].reshape(-1,1)
-                z = pts_lidar[:,2].reshape(-1,1)
-            # Intensity column --> Currently Hesai Data --> Original [y,x,z]
-            elif(pts_lidar.shape[0] % 4 ==0):
+            if(pts_lidar.shape[0] % 4 ==0):
                 pts_lidar = pts_lidar.reshape(-1,4)[:,:3]
                 y = pts_lidar[:,0].reshape(-1,1)
                 x = pts_lidar[:,1].reshape(-1,1)
                 z = pts_lidar[:,2].reshape(-1,1)
             else:
                 pts_lidar = None
-                print("bin File Though has greated than 3 and 4 columns")
+                print("bin File Though has other than 4 columns")
             pts_lidar = np.concatenate([-y,-z,x], axis = 1)
 
         else:
