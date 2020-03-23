@@ -4,7 +4,6 @@ app/.ipynb_checkpoints/
 app/output/
 app/PointCNN/output/
 *.pyc
-*.bin
 .ipynb
 *.ipynb
 *.npy

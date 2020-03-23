@@ -83,11 +83,11 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper) {
                 }
                 var epsilon = 0;
                 
-                this.geometry.vertices[0].y = y_max +epsilon;
-                this.geometry.vertices[1].y = y_max +epsilon;
-                this.geometry.vertices[2].y = y_max +epsilon;
-                this.geometry.vertices[3].y = y_max +epsilon;
-                this.geometry.vertices[4].y = y_max +epsilon;
+                this.geometry.vertices[0].y = y_max + epsilon;
+                this.geometry.vertices[1].y = y_max + epsilon;
+                this.geometry.vertices[2].y = y_max + epsilon;
+                this.geometry.vertices[3].y = y_max + epsilon;
+                this.geometry.vertices[4].y = y_max + epsilon;
 
                 //this.bbox3d.setFromCenterAndSize(new THREE.Vector3(center.x, y_max- (height / 2) , center.z), new THREE.Vector3(length, height, width));
 
@@ -125,10 +125,14 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper) {
             var py = [];
             var vertices= app.cur_frame.data;
             var k = 0;
+
+            console.log("DATA_STRIDE:" + DATA_STRIDE);
             for ( var i = 0, l = vertices.length / DATA_STRIDE; i < l; i ++ ) {
 
                 var v = new THREE.Vector3( vertices[ DATA_STRIDE * k + 1 ], 
                 0, vertices[ DATA_STRIDE * k ] );
+
+                console.log("V: " + v);
                 if (v && containsPoint(this, v)) {
                     //console.log("v.y", v, v.y);
                     py.push(vertices[ DATA_STRIDE * k + 2 ]);
@@ -137,9 +141,13 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper) {
                 k++; 
             }
 
+
             var y_min = Math.min(...py);
             var y_max = Math.max(...py);
 
+            console.log('y_min: ' + y_min);
+            console.log('y_max: ' + y_max);
+            console.log('Mean' + (y_min + y_max)*0.5);
 
 
             var car_height = y_max - y_min;
@@ -152,7 +160,9 @@ function Box(anchor, cursor, angle, boundingBox, boxHelper) {
                 
                 
                 this.y_max = y_max;
-                this.height = car_height;
+                console.log("height: " + this.height);
+
+                //this.height = car_height;
                 
                 this.box_created = true;
             }

@@ -294,6 +294,8 @@ class BoundingBox:
 
         bounded_indices = np.intersect1d(indices_within_width,
                 indices_within_length)
+
+        print("***********************************************************************")
         return bounded_indices
 
     def grow_pointcloud(self, pointcloud):

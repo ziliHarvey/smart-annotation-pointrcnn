@@ -1,15 +1,8 @@
 import os
 import numpy as np
 import torch.utils.data as torch_data
-import lib.utils.calibration as calibration
-import lib.utils.kitti_utils as kitti_utils
-from PIL import Image
-import argoverse
 import lib.datasets.ground_segmentation as gs
 from pyntcloud import PyntCloud
-import random
-import copy
-#import open3d as o3d
 
 
 class KittiDataset(torch_data.Dataset):
@@ -23,7 +16,7 @@ class KittiDataset(torch_data.Dataset):
         
         self.lidar_names = [x.split('.')[0] for x in lidarfile_list]
 
-        self.lidar_file_extension = [x.split('.')[1] for x in lidarfile_list]
+        self.lidar_file_extension = [x.split('.')[-1] for x in lidarfile_list]
         
         self.lidar_name_table = dict(zip(self.lidar_idx_list, self.lidar_names))
         self.lidar_ext__table = dict(zip(self.lidar_idx_list, self.lidar_file_extension))
@@ -39,9 +32,9 @@ class KittiDataset(torch_data.Dataset):
     def get_lidar(self,idx):
         ext = self.lidar_ext__table["%06d"%idx]
         lidar_file = os.path.join(self.lidar_dir,self.lidar_name_table["%06d"%idx] + '.'+ ext )
-        
         assert os.path.exists(lidar_file)
-        
+        pts_lidar = None
+
         if(ext == 'ply'):
             data = PyntCloud.from_file(lidar_file)
             x = np.array(data.points.x)[:, np.newaxis]
@@ -50,17 +43,15 @@ class KittiDataset(torch_data.Dataset):
             pts_lidar = np.concatenate([-y,-z,x], axis = 1)   
 
         elif(ext == 'bin'):
-            pts_lidar = np.fromfile(lidar_file).reshape(-1,3)[:,:3].astype('float32')
-            x = pts_lidar[:,0].reshape(-1,1)
-            y = pts_lidar[:,1].reshape(-1,1)
-            z = pts_lidar[:,2].reshape(-1,1)
-            pts_lidar = np.concatenate([-y,-z,x], axis = 1)
-        elif(ext == 'pcd'):
-            #pts_lidar = np.asarray(o3d.io.read_point_cloud(lidar_file).points).astype('float32')
-            pts_lidar = PyntCloud.from_file(lidar_file)
-            x = pts_lidar[:,0].reshape(-1,1)
-            y = pts_lidar[:,1].reshape(-1,1)
-            z = pts_lidar[:,2].reshape(-1,1)
+            pts_lidar = np.fromfile(lidar_file,'float32')
+            if(pts_lidar.shape[0] % 4 ==0):
+                pts_lidar = pts_lidar.reshape(-1,4)[:,:3]
+                y = pts_lidar[:,0].reshape(-1,1)
+                x = pts_lidar[:,1].reshape(-1,1)
+                z = pts_lidar[:,2].reshape(-1,1)
+            else:
+                pts_lidar = None
+                print("bin File Though has other than 4 columns")
             pts_lidar = np.concatenate([-y,-z,x], axis = 1)
 
         else:
@@ -69,10 +60,4 @@ class KittiDataset(torch_data.Dataset):
         if self.ground_removal: 
             pts_lidar, ground_pts = gs.ground_segmentation(pts_lidar)
         
-
-
-        #pts_lidar = np.dot(self.argo_to_kitti,pts_lidar.T).T
-        #pts_lidar = np.dot(self.argo_to_kitti,pts_lidar.T).T
-
-
         return pts_lidar

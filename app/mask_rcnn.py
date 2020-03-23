@@ -27,15 +27,10 @@ def get_pointcnn_labels_axcrf(filename):
 
 def get_pointcnn_labels(filename, settingsControls, ground_removed=False, foreground_only=True):
     
-    
-    #print("please wait....", filename)
 
     seg_dir = "PointCNN/output/rcnn/argo_config_sampling_trainfull/eval/epoch_no_number/sample/test_mode/rpn_result/data"
-    data_dir = "test_dataset/0_drive_0064_sync/sample/argoverse/lidar"
-
     drivename, fname = filename.split("/")
 
-    orig_lidar = data_dir + "/" + fname + ".ply"
     seg_file = seg_dir + "/" + fname + ".npy" 
 
     if not os.path.isfile(seg_file):
@@ -45,25 +40,13 @@ def get_pointcnn_labels(filename, settingsControls, ground_removed=False, foregr
         preprocess()
     
     
-    seg_points = np.load(seg_file).reshape(-1, 5)     
-    mask_foreground = (seg_points[:,-1] == 1)
-    pts_lidar = PyntCloud.from_file(orig_lidar)
-    x = np.array(pts_lidar.points.x)[:, np.newaxis]
-    y = np.array(pts_lidar.points.y)[:, np.newaxis]
-    z = np.array(pts_lidar.points.z)[:, np.newaxis]
-    full_data = np.concatenate([x,y,z], axis = 1)
-
-
-    #bounded_indices = np.load(seg_file).reshape(-1, 5)[:, -1].flatten()
-    bounded_indices = np.in1d(full_data[:,0],seg_points[mask_foreground][:,0]) 
-    bounded_indices =   (bounded_indices == True ).nonzero()[0]
-    return bounded_indices.tolist()
-
-    '''
+    seg_points = np.load(seg_file).astype('float32').reshape(-1, 5)     
+    bounded_indices = np.load(seg_file).reshape(-1, 5)[:, -1].flatten()
+   
     if(foreground_only):
         bounded_indices =   (bounded_indices == 1.0 ).nonzero()[0]
         return bounded_indices.tolist()
     else:
         return bounded_indices
-    '''
+    
 
