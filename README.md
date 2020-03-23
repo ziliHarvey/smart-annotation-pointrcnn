@@ -26,7 +26,7 @@ and the rest will be very fast.
 - [x] One-click annotation by holding A key and click on the point
 - [x] Fix heading angle in boxes display
 - [x] Display all LiDAR points with corresponded point labels
-- [ ] Modify dataLoader to run on the specied file
+- [x] Modify dataLoader to run on the specied file
 - [ ] remove legacy code and files and clean
 - [ ] Modify dataLoader to run for inference without ground truth
 - [ ] Tracking, etc.
