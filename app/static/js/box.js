@@ -900,7 +900,7 @@ function OutputBox(box) {
     this.kitti_x = (v1.x+v2.x)/2.0;
     this.kitti_y = (v1.z+v2.z)/2.0;
     this.kitti_z = getCenterHeight(box);
-    this.kitti_theta = Math.Pi/2-box.angle;
+    this.kitti_theta = Math.PI/2-box.angle;
     this.kitti_l = this.width; 
     this.kitti_w =  this.length;
     this.kitti_h =  this.height;
