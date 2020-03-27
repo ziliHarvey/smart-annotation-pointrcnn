@@ -897,11 +897,11 @@ function OutputBox(box) {
     // id, class, x, y, z, theta, l, w, h
     this.kitti_id = box.id;
     this.kitti_class = box.object_id;
-    this.kitti_x = (v1.z+v2.z)/2.0;
-    this.kitti_y = (v1.x+v2.x)/2.0; 
+    this.kitti_x = (v1.x+v2.x)/2.0;
+    this.kitti_y = (v1.z+v2.z)/2.0;
     this.kitti_z = getCenterHeight(box);
-    this.kitti_theta = box.angle;
-    this.kitti_l = this.length; 
-    this.kitti_w =  this.width;
+    this.kitti_theta = Math.Pi/2-box.angle;
+    this.kitti_l = this.width; 
+    this.kitti_w =  this.length;
     this.kitti_h =  this.height;
 }
