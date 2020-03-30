@@ -1,5 +1,6 @@
-# smart-annotation-pointrcnn (IN PROGRESS...)
+# smart-annotation-pointrcnn
 SANE-PointRCNN, a browser-based 3D bounding boxes annotation tool assisted by PointRCNN.
+<p align="center"><img src="https://github.com/ziliHarvey/smart-annotation-pointrcnn/blob/zili/docs/imgs/demo.png"></p>
 
 ## Environment
 Tested on Debian 9.9, Cuda: 10.0, Python: 3.6, Pytorch: 1.2.0 with Anaconda
