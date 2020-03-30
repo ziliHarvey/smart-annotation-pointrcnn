@@ -262,7 +262,7 @@ class KittiRCNNDataset(KittiDataset):
                 pts_input = np.concatenate((ret_pts_rect, ret_pts_features), axis=1)  # (N, C)
             else:
                 pts_input = ret_pts_rect
-                print(pts_input.shape,rem_index.shape,pts_left.shape)
+                # print(pts_input.shape,rem_index.shape,pts_left.shape)
                 sample_info['pts_input'] = pts_input
                 sample_info['rem_pts'] = pts_left
                 sample_info['pts_rect']  = ret_pts_rect

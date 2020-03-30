@@ -209,8 +209,10 @@ def eval_one_epoch_joint(model, dataloader, epoch_id, result_dir, logger):
     return ret_dict
 
 
-def eval_one_epoch_joint_single_file(model, input_list, file_path, result_dir,logger):
+def eval_one_epoch_joint_single_file(model, file_path, result_dir,logger):
     np.random.seed(666)
+
+    input_list = get_lidar(file_path)
 
     # Loads the mean size of the CLASS from CFG YAML file
     MEAN_SIZE = torch.from_numpy(cfg.CLS_MEAN_SIZE[0]).cuda()
@@ -247,8 +249,8 @@ def eval_one_epoch_joint_single_file(model, input_list, file_path, result_dir,lo
     #inputs = torch.from_numpy(pts_input).cuda(non_blocking=True).float()
 
     pts_lidar = input_list[0]
-    rem_index = input_list[2]
-    input_data = {'pts_input': torch.from_numpy(pts_lidar[input_list[1], :]).view(1,-1,3).float().cuda()}
+    rem_pts = input_list[1]
+    input_data = {'pts_input': torch.from_numpy(pts_lidar).view(1,-1,3).float().cuda()}
 
     # model inference
     ret_dict = model(input_data)
@@ -298,13 +300,15 @@ def eval_one_epoch_joint_single_file(model, input_list, file_path, result_dir,lo
         rpn_xyz_np = np.concatenate([rpn_xyz_np[0][:,2].reshape(-1,1),-rpn_xyz_np[0][:,0].reshape(-1,1),-rpn_xyz_np[0][:,1].reshape(-1,1)], axis = 1).reshape(1,-1,3)
         seg_result_np = seg_result.cpu().numpy()
 
-        rest_lidar_pts = np.hstack((pts_lidar[rem_index,:], np.zeros(len(rem_index)).reshape(-1,1), np.zeros(len(rem_index)).reshape(-1,1))).reshape(1,-1,5)
+        rem_pts = np.concatenate([rem_pts[:,2].reshape(-1,1),-rem_pts[:,0].reshape(-1,1), -rem_pts[:,1].reshape(-1,1)], axis = 1)
+        
+        rest_lidar_pts = np.hstack((rem_pts, np.zeros(rem_pts.shape[0]).reshape(-1,1), np.zeros(rem_pts.shape[0]).reshape(-1,1))).reshape(1,-1,5)
 
         output_data = np.concatenate((rpn_xyz_np, rpn_cls_np.reshape(1, -1, 1),
                                       seg_result_np.reshape(1, -1, 1)), axis=2)
-        output_data = np.hstack((rest_lidar_pts,output_data))
         
-        # Change this
+        output_data = np.hstack((rest_lidar_pts,output_data))
+       
         cur_sample_id = 0
         output_file = os.path.join(rpn_output_dir, filename + '.npy')
         np.save(output_file, output_data.astype(np.float32))
@@ -334,40 +338,59 @@ def eval_one_epoch_joint_single_file(model, input_list, file_path, result_dir,lo
     
     return ret_dict
 
-def get_lidar(lidar_file):
+def get_lidar(fname):
         
+        lidar_file = "../../test_dataset/0_drive_0064_sync/sample/argoverse/lidar/" + fname + ".bin"
+        ext = lidar_file.split('.')[-1]
         assert os.path.exists(lidar_file)
-        ground_removal = False
-        
-        data = PyntCloud.from_file(lidar_file)
-        x = np.array(data.points.x)[:, np.newaxis]
-        y = np.array(data.points.y)[:, np.newaxis]
-        z = np.array(data.points.z)[:, np.newaxis]
-        pts_lidar = np.concatenate([x,y,z], axis = 1)
-        
-        '''
-        if ground_removal: 
-            pts_lidar = gs.ground_segmentation(pts_lidar)
-        '''
-        pts_lidar_orig = np.dot(argo_to_kitti,pts_lidar.T).T
-        total_index = pts_lidar_orig.shape[0]
+        print("===============================================================")
+        pts_lidar = None
 
-        valid_mask = get_valid_flag(pts_lidar_orig)
-        pts_lidar = pts_lidar_orig[valid_mask]
+        if(ext == 'ply'):
+            data = PyntCloud.from_file(lidar_file)
+            x = np.array(data.points.x)[:, np.newaxis]
+            y = np.array(data.points.y)[:, np.newaxis]
+            z = np.array(data.points.z)[:, np.newaxis]
+            pts_lidar = np.concatenate([-y,-z,x], axis = 1)   
+
+        elif(ext == 'bin'):
+            data = np.fromfile(lidar_file,'float32')
+            if(data.shape[0] % 4 ==0):
+                data = data.reshape(-1,4)[:,:3]
+                y = data[:,0].reshape(-1,1)
+                x = data[:,1].reshape(-1,1)
+                z = data[:,2].reshape(-1,1)
+            else:
+                pts_lidar = None
+                print("bin File Though has other than 4 columns")
+            pts_lidar = np.concatenate([-y,-z,x], axis = 1)
+
+        else:
+            pass
+
+        pts_orig = pts_lidar[:, 0:3]
+        # print(pts_orig.shape)
+        
+        valid_mask = get_valid_flag(pts_orig)
+        pts_rect = pts_orig[valid_mask]
+        pts_left = pts_orig[~valid_mask]
+        total_index = pts_rect.shape[0] # Valid Mask Pts Index
+
+        # print(pts_rect.shape, pts_left.shape)
 
         npoints = 65536
-        if npoints < len(pts_lidar):
+        if npoints < len(pts_rect):
             #Selecting the depth column
-            pts_depth = pts_lidar[:, 2]
-            # Creating a Mask for points within a radius of 60.0 
-            pts_near_flag = np.abs(pts_depth) < 60.0
+            pts_depth = pts_rect[:, 2]
+            # Creating a Mask for points within a radius of 40.0 
+            pts_near_flag = np.abs(pts_depth) < 40.0
             # Creating the complimentary mask for far points
             far_idxs_choice = np.where(pts_near_flag == 0)[0]
             # Creating index for near points
             near_idxs = np.where(pts_near_flag == 1)[0]
             # randomly select points from near points indexes, total upto (max points- far points)
             # near_points + far_points --> total points
-            near_idxs_choice = np.random.choice(near_idxs, npoints - len(far_idxs_choice), replace=True)
+            near_idxs_choice = np.random.choice(near_idxs, npoints - len(far_idxs_choice), replace=False)
             # concatenate the randomly chosen near points indexes with far points indexes
             choice = np.concatenate((near_idxs_choice, far_idxs_choice), axis=0) \
                 if len(far_idxs_choice) > 0 else near_idxs_choice
@@ -376,16 +399,22 @@ def get_lidar(lidar_file):
             # max_points > total_points 
         else:
             # Case : self.npoints(max_points) == len(pts_rect) (total points)
-            choice = np.arange(0, len(pts_lidar), dtype=np.int32)
-            if npoints > len(pts_lidar):
-                extra_choice = np.random.choice(choice, npoints - len(pts_lidar), replace=True)
+            choice = np.arange(0, len(pts_rect), dtype=np.int32)
+            if npoints > len(pts_rect):
+                extra_choice = np.random.choice(choice, npoints - len(pts_rect), replace=True)
                 choice = np.concatenate((choice, extra_choice), axis=0)
             np.random.shuffle(choice)
 
         rem_index = np.setdiff1d(np.arange(total_index),choice)
-        #pts_lidar = torch.from_numpy(pts_lidar[choice, :]).view(1,-1,3).float().cuda()
+        pts_choice = pts_rect[choice, :]
         
-        return [pts_lidar_orig, choice, rem_index]
+        # print(pts_choice.shape, rem_index.shape)
+
+        rem_pts = np.vstack((pts_left, pts_rect[rem_index,:]))
+        # print("rem_pts: ",rem_pts.shape)
+        # pts_lidar = torch.from_numpy(pts_lidar[choice, :]).view(1,-1,3).float().cuda()
+        
+        return [pts_choice, rem_pts]
 
 def get_valid_flag(pts_rect):
     """
@@ -481,7 +510,7 @@ def eval_single_ckpt(root_result_dir):
     load_ckpt_based_on_args(model, logger)
 
     if(args.single_file != None):
-        eval_one_epoch_joint_single_file(model,get_lidar(args.single_file),args.single_file,root_result_dir,logger)
+        eval_one_epoch_joint_single_file(model,  args.single_file, root_result_dir, logger)
 
     else:
         # create dataloader & network
