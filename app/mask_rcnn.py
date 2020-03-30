@@ -7,10 +7,6 @@ import random
 from preprocess import preprocess
 from pyntcloud import PyntCloud
 
-
-pythonApp = "python "
-script_seg = "eval_rcnn.py --cfg_file cfgs/argo_config_sampling_trainfull.yaml --rcnn_ckpt checkpoint_epoch_40.pth --rpn_ckpt checkpoint_epoch_50.pth --batch_size 1 --eval_mode rcnn --test"
-
 def check_succes_sys_call(_command, file_check):
     i = 0
     while os.path.isfile(file_check) == False :
@@ -37,7 +33,7 @@ def get_pointcnn_labels(filename, settingsControls, ground_removed=False, foregr
         # execute pointrcnn
         # currently have to run on the whole files to generate corresponding out
         # will be replaced by only inferencing on this specific file
-        preprocess()
+        preprocess(fname)
     
     
     seg_points = np.load(seg_file).astype('float32').reshape(-1, 5)     

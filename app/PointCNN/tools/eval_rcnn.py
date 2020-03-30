@@ -334,16 +334,24 @@ def eval_one_epoch_joint_single_file(model, input_list, file_path, result_dir,lo
     
     return ret_dict
 
-def get_lidar(lidar_file):
+def get_lidar(fname):
         
+        lidar_file = "../../test_dataset/0_drive_0064_sync/sample/argoverse/lidar/" + fname + ".bin"
         assert os.path.exists(lidar_file)
+        print("===============================================================")
+        print(lidar_file)
         ground_removal = False
         
-        data = PyntCloud.from_file(lidar_file)
-        x = np.array(data.points.x)[:, np.newaxis]
-        y = np.array(data.points.y)[:, np.newaxis]
-        z = np.array(data.points.z)[:, np.newaxis]
-        pts_lidar = np.concatenate([x,y,z], axis = 1)
+        pts_lidar = np.fromfile(lidar_file,'float32')
+        if(pts_lidar.shape[0] % 4 ==0):
+            pts_lidar = pts_lidar.reshape(-1,4)[:,:3]
+            y = pts_lidar[:,0].reshape(-1,1)
+            x = pts_lidar[:,1].reshape(-1,1)
+            z = pts_lidar[:,2].reshape(-1,1)
+        else:
+            pts_lidar = None
+            print("bin File Though has other than 4 columns")
+#         pts_lidar = np.concatenate([-y,-z,x], axis = 1)
         
         '''
         if ground_removal: 

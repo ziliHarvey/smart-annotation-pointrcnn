@@ -63,7 +63,9 @@ class FrameHandler:
             # execute pointrcnn
             # currently have to run on the whole files to generate corresponding out,
             # will be replaced by only inferencing on this specific fil
-            preprocess()
+            preprocess(fname)
+        
+        assert isfile(seg_file)
 
         data = None
         if isfile(seg_file):
