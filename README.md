@@ -1,5 +1,6 @@
 # smart-annotation-pointrcnn
 SANE-PointRCNN, a browser-based 3D bounding boxes annotation tool assisted by PointRCNN.
+This works is based on H. A. Arief's [paper](https://www.researchgate.net/publication/343035132_SAnE_Smart_Annotation_and_Evaluation_tools_for_point_cloud_data) and [code](https://github.com/hasanari/sane)  
 <p align="center"><img src="https://github.com/ziliHarvey/smart-annotation-pointrcnn/blob/zili/docs/imgs/demo.png"></p>
 
 ## Environment
